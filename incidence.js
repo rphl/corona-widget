@@ -319,7 +319,7 @@ function createIncidenceLabelBlock(labelBlock, data, weekData, fixedCoordinateIn
     stackMainRow.size = (MEDIUMWIDGET) ? new Size(145, 30) : new Size(135, 30)
 
     // MAIN INCIDENCE
-    let incidence = data.incidence >= 100 ? Math.floor(data.incidence) : data.incidence;
+    let incidence = data.incidence >= 100 ? Math.round(data.incidence) : data.incidence;
     const incidenceLabel = stackMainRow.addText('' + incidence)
     incidenceLabel.font = Font.boldSystemFont(27)
     incidenceLabel.leftAlignText();
@@ -339,7 +339,7 @@ function createIncidenceLabelBlock(labelBlock, data, weekData, fixedCoordinateIn
     incidenceBLStack.cornerRadius = 4
     incidenceBLStack.setPadding(2,3,2,3)
 
-    const incidenceBL = (data.incidenceBL >= 100) ? Math.floor(data.incidenceBL) : data.incidenceBL
+    const incidenceBL = (data.incidenceBL >= 100) ? Math.round(data.incidenceBL) : data.incidenceBL
     const incidenceBLLabel = incidenceBLStack.addText(incidenceBL + getIncidenceBLTrend(data, weekData) + '\n' + data.nameBL)
     incidenceBLLabel.font = Font.mediumSystemFont(9)
     incidenceBLLabel.textColor = new Color('444444')
