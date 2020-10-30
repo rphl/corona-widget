@@ -1,6 +1,6 @@
 # Corona Inzidenz Widget für iOS (Scriptable)
 
-![IMG_5438](https://user-images.githubusercontent.com/97642/97356212-39dfdc80-1898-11eb-93cf-1de0fb6f9dab.PNG)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshot.png)
 
 
 * Auf grund der positiven Resonanz jetzt im Repo zur einfacheren Wartung/Erweiterung
@@ -13,6 +13,11 @@ _Einen Kaffee ausgeben 🙃: https://ko-fi.com/rapha_
 ---
 
 **Updates**
+***30.10.2020***
+* Neues Layout
+* Reproduktionszahl im Widget
+* Trend Diagramm für Gesamt-Inzidenz
+
 ***27.10.2020***
 * Trend-Diagramme der letzten (max.)7 Tage für:  Stadt / BL / Gesamt (Gespeicherte Werte werden wiederverwendet. Sonst am nächsten Tag 🙃)
 * Unterstützung für eigene Namen (Siehe Kommentar oben im Skript)
