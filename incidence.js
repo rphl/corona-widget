@@ -10,6 +10,7 @@ const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcg
 const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
 const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
 const apiUrlNewCases = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
+const apiRUrl = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
 
 /**
  * Fix Coordinates/MediumWidget
@@ -29,12 +30,12 @@ const LIMIT_DARKRED = 100
 const LIMIT_RED = 50
 const LIMIT_ORANGE = 35
 const LIMIT_YELLOW = 25
-const LIMIT_DARKRED_COLOR = new Color('9e000a') // DARKRED: 
+const LIMIT_DARKRED_COLOR = new Color('a1232b')
 const LIMIT_RED_COLOR = new Color('f6000f')
-const LIMIT_ORANGE_COLOR = new Color('#ff7927')
+const LIMIT_ORANGE_COLOR = new Color('ff7927')
 const LIMIT_YELLOW_COLOR = new Color('F5D800')
 const LIMIT_GREEN_COLOR = new Color('1CC747')
-
+const LIMIT_GRAY_COLOR = new Color('d0d0d0')
 const BUNDESLAENDER_SHORT = {
     'Baden-Württemberg': 'BW',
     'Bayern': 'BY',
@@ -55,23 +56,18 @@ const BUNDESLAENDER_SHORT = {
 };
 
 let MEDIUMWIDGET = (config.widgetFamily === 'medium') ? true : false
-let fixedCoordinates = []
+let staticCoordinates = []
 if (args.widgetParameter) {
-    fixedCoordinates = parseInput(args.widgetParameter)
-    if (typeof fixedCoordinates[1] !== 'undefined' && Object.keys(fixedCoordinates[1]).length >= 3) {
+    staticCoordinates = parseInput(args.widgetParameter)
+    if (typeof staticCoordinates[1] !== 'undefined' && Object.keys(staticCoordinates[1]).length >= 3) {
         MEDIUMWIDGET = true
     }
-} else { // DEBUG MEDIUM WIDGET
-    // fixedCoordinates[0] = { index: 0, latitude: 51.23377, longitude: 6.7731, name: false }
-    // fixedCoordinates[1] = { index: 1, latitude: 48.24670, longitude: 12.52155, name: 'Work' }
-    // fixedCoordinates[0] = { index: 0, latitude: 48.13743, longitude: 11.57549, name: false }
-    // fixedCoordinates[1] = { index: 1, latitude: 53.551086, longitude: 9.993682, name: 'Home' }
-    // MEDIUMWIDGET = true
 }
 
 let data = {}
 let weekData = {}
 const widget = await createWidget()
+widget.setPadding(0,0,0,0)
 if (!config.runsInWidget) {
     if (MEDIUMWIDGET) {
         await widget.presentMedium()
@@ -83,89 +79,277 @@ Script.setWidget(widget)
 Script.complete()
 
 async function createWidget() {
-    const _data = await getData(0)
-    let areaName;
-    if (_data && typeof _data.areaName !== 'undefined') {
-        areaName = _data.areaName;
-        data[areaName] = _data
-    }
     const list = new ListWidget()
-    const headerLabel = list.addStack()
-    headerLabel.useDefaultPadding()
-    headerLabel.centerAlignContent()
-    if (MEDIUMWIDGET) {
-        headerLabel.layoutHorizontally()
-    } else {
-        list.setPadding(10,15,10,10)
-        headerLabel.layoutVertically()
-    }
-
-    const header = headerLabel.addText("🦠 Inzidenz".toUpperCase())
-    header.font = Font.mediumSystemFont(13)
-
-    if (data && typeof data[areaName] !== 'undefined') {
-        weekData[areaName] = saveLoadData(data[areaName], areaName)
-        if (!data[areaName].shouldCache) {
-            list.addSpacer(6)
-            const loadingIndicator = list.addText("Ort wird ermittelt...".toUpperCase())
-            loadingIndicator.font = Font.mediumSystemFont(13)
-            loadingIndicator.textOpacity = 0.5
-        }
-        if (MEDIUMWIDGET && typeof data[areaName] !== 'undefined') {
-            headerLabel.addSpacer()
-            createGerTopDailyCasesLabel(headerLabel, data[areaName], weekData[areaName])
-        }
-        list.addSpacer(16)
+    const headerRow = addHeaderRowTo(list)
+    const data = await getData(0)
+    if (data) {
+        headerRow.addSpacer(3)
+        let todayData = getDataForDate(data)
+        addLabelTo(headerRow, 'R ' + todayData.r, Font.mediumSystemFont(14))
+        headerRow.addSpacer()
+    
+        let chartdata = getChartData(data, 'averageIncidence');
+        // chartdata = [4,13,25,31,45,55,60] // DEMO!!!
+        addChartBlockTo(headerRow, getGetLastCasesAndTrend(data, 'cases'), chartdata, false)
         
-        // INCIDENCE
-        const incidenceLabel = list.addStack()
+        list.addSpacer(3)
+
+        const incidenceRow = list.addStack()
+        incidenceRow.layoutHorizontally()
+        incidenceRow.centerAlignContent()
+    
+        let padding = (MEDIUMWIDGET) ? 5 : 10
+        addIncidenceBlockTo(incidenceRow, data, [2,10,10,padding], 0)
         if (MEDIUMWIDGET) {
-            incidenceLabel.size = new Size(300, 90)
+            const data1 = await getData(1)
+            addIncidenceBlockTo(incidenceRow, data1, [2,padding,10,10], 1)
         }
-        incidenceLabel.layoutHorizontally()
-        incidenceLabel.useDefaultPadding()
-        incidenceLabel.topAlignContent()
-        createIncidenceLabelBlock(incidenceLabel, data[areaName], weekData[areaName], 0)
-
-        const _dataF = await getData(1)
-        let areaNameF
-        if (_dataF && typeof _dataF.areaName !== 'undefined') {
-            areaNameF = _dataF.areaName;
-            data[areaNameF] = _dataF
-        }
-        if (MEDIUMWIDGET  && typeof data[areaNameF] !== 'undefined') { 
-            weekData[areaNameF] = saveLoadData(data[areaNameF], areaNameF)
-            incidenceLabel.addSpacer(10)
-            createIncidenceLabelBlock(incidenceLabel, data[areaNameF], weekData[areaNameF], 1)
-        }
-        
-        if (data[areaName].shouldCache) {
-            list.refreshAfterDate = new Date(Date.now() + 60 * 60 * 1000)
-        }
+        list.url = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4"
+        list.refreshAfterDate = new Date(Date.now() + 60 * 60 * 1000)
     } else {
+        headerRow.addSpacer()
         list.addSpacer()
-        const errorLabel = list.addText("Daten nicht verfügbar. \nWidget öffnen für reload...")
-        errorLabel.font = Font.mediumSystemFont(12)
-        errorLabel.textColor = Color.gray()
+        let errorBox = list.addStack()
+        errorBox.setPadding(10, 10, 10, 10)
+        addLabelTo(errorBox, "⚡️Daten konnten nicht geladen werden. Widget öffnen für reload", Font.mediumSystemFont(10), Color.gray())
     }
-
     return list
 }
 
-async function getData(useFixedCoordsIndex = false) {
+function getGetLastCasesAndTrend(data, field, calcDiff = false, fromBL = false) {
+    // TODAY
+    let casesTrendStr = '';
+    let todayData = getDataForDate(data)
+    let todayCases = todayData[field];
+    if (fromBL) todayCases = getBLCases(todayData.incidencePerState, todayData.nameBL)
+
+    // YESTERDAY
+    let yesterdayData = getDataForDate(data, 1)
+    if (calcDiff) {
+        if (yesterdayData) {
+            let yesterdayCases = yesterdayData[field];
+            if (fromBL) yesterdayCases = getBLCases(yesterdayData.incidencePerState, yesterdayData.nameBL)
+            if (yesterdayCases) casesTrendStr = formatNumber(todayCases - yesterdayCases);
+
+            // BEFOREYESTERDAY
+            let beforeYesterdayData = getDataForDate(data, 2)
+            if (beforeYesterdayData) {
+                let beforeYesterdayCases = beforeYesterdayData[field];
+                if (fromBL) beforeYesterdayCases = getBLCases(beforeYesterdayData.incidencePerState, beforeYesterdayData.nameBL)
+                casesTrendStr += getTrendArrow(todayCases - yesterdayCases, yesterdayCases - beforeYesterdayCases)
+            }
+        } else {
+            casesTrendStr = 'n/v'
+        }
+    } else {
+        casesTrendStr = formatNumber(todayCases);
+        if (yesterdayData) {
+            let yesterdayCases = yesterdayData[field];
+            casesTrendStr += getTrendArrow(todayCases, yesterdayCases)
+        }
+    }
+    return casesTrendStr
+}
+
+function getBLCases(states, BL) {
+    if (typeof states !== 'undefined') {
+        let state = states.filter(item => {
+            return (item.BL === BL)
+        }).pop()
+        return state.cases    
+    }
+    return 0
+}
+
+function getChartData (data, field) {
+    const chartdata = new Array(7).fill(0);
+    const offset = 7 - Object.keys(data).length
+    Object.keys(data).forEach((key, index) => {
+        chartdata[offset + index] = data[key][field]
+    })
+    return chartdata
+}
+
+function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
+    const incidenceBlockBox = view.addStack()
+    incidenceBlockBox.setPadding(padding[0], padding[1], padding[2], padding[3])
+
+    const incidenceBlock = incidenceBlockBox.addStack()
+    incidenceBlock.cornerRadius = 12
+    incidenceBlock.backgroundColor = new Color('1a1a1a')
+    
+    const incidenceBlockRows = incidenceBlock.addStack()
+    incidenceBlockRows.backgroundColor = new Color('1a1a1a')
+    incidenceBlockRows.layoutVertically()
+
+    addIncidence(incidenceBlockRows, data, useStaticCoordsIndex)
+    addTrendsBarToIncidenceBlock(incidenceBlockRows, data)
+    incidenceBlockRows.addSpacer(2)
+    
+    return incidenceBlockBox;
+}
+
+function addIncidence(view, data, useStaticCoordsIndex = false) {
+    const todayData = getDataForDate(data)
+    const yesterdayData = getDataForDate(data, 1)
+    const stackMainRowBox = view.addStack()
+    stackMainRowBox.backgroundColor = new Color('292929')
+    stackMainRowBox.layoutVertically()
+    stackMainRowBox.setPadding(6,8,6,8)
+    stackMainRowBox.cornerRadius = 10
+    stackMainRowBox.addSpacer(0)
+
+    if (todayData.blockPosition === 0) {
+        const dateStr = todayData.updated.substr(0, 10)
+        addLabelTo(stackMainRowBox, dateStr, Font.mediumSystemFont(10), Color.gray())
+        stackMainRowBox.addSpacer(0)
+    } else {
+        stackMainRowBox.addSpacer(10)
+    }
+    const stackMainRow = stackMainRowBox.addStack()
+    stackMainRow.centerAlignContent()
+
+    // === INCIDENCE
+    const incidence = (todayData.incidence >= 100) ? Math.round(todayData.incidence) : todayData.incidence;
+    addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(incidence))
+    
+    if (yesterdayData) {
+        const incidenceTrend = getTrendArrow(todayData.incidence, yesterdayData.incidence);
+        const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
+        addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
+    }
+    stackMainRow.addSpacer(5)
+
+    // === BL INCIDENCE
+    const incidenceBLStack = stackMainRow.addStack();
+    incidenceBLStack.layoutVertically()
+    incidenceBLStack.backgroundColor = new Color('f0f0f0')
+    incidenceBLStack.cornerRadius = 4
+    incidenceBLStack.setPadding(2,3,2,3)
+
+    let incidenceBL = (todayData.incidenceBL >= 100) ? Math.round(todayData.incidenceBL) : todayData.incidenceBL;
+    if (yesterdayData) {
+        incidenceBL += getTrendArrow(todayData.incidenceBL, yesterdayData.incidenceBL)
+    }
+    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
+    addLabelTo(incidenceBLStack, todayData.nameBL, Font.mediumSystemFont(9), '444444')
+
+    stackMainRow.addSpacer()
+    stackMainRow.addSpacer()
+
+    let areaName = todayData.areaName
+    if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
+        areaName = staticCoordinates[useStaticCoordsIndex].name
+    }
+    const areanameLabel = addLabelTo(stackMainRowBox, areaName.toUpperCase(), Font.mediumSystemFont(14), Color.white())
+    areanameLabel.lineLimit = 1
+    stackMainRowBox.addSpacer(0)
+}
+
+function addLabelTo(view, text, font = false, textColor = false) {
+    const label = view.addText('' + text)
+    if (font) label.font = font
+    if (textColor) label.textColor = (typeof textColor === 'string') ? new Color(textColor) : textColor;
+    return label
+}
+
+function formatNumber(number) {
+    return new Number(number).toLocaleString('de-DE')
+}
+
+function getTrendArrow(value1, value2) {
+    return (value1 < value2) ? '↓' : (value1 > value2) ? '↑' : '→'
+}
+
+function addTrendsBarToIncidenceBlock(view, data) {
+    const trendsBarBox = view.addStack()
+    trendsBarBox.setPadding(3,8,3,8)
+    trendsBarBox.layoutHorizontally()
+    let chartdata = getChartData(data, 'incidence')
+    // chartdata = [4,32,40,50,101,55,20] // DEMO!!!
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'areaCases', true), chartdata, true, Color.white())
+    trendsBarBox.addSpacer()    
+    let chartdataBL = getChartData(data, 'incidenceBL')
+    // chartdataBL = [4,28,35,51,75,105,60] // DEMO!!!
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'cases', true, true), chartdataBL, false, Color.white())
+}
+
+function addHeaderRowTo(view) {
+    const headerRow = view.addStack()
+    headerRow.setPadding(8,8,4,8)
+    headerRow.centerAlignContent()
+    const headerIcon = headerRow.addText("🦠")
+    headerIcon.font = Font.mediumSystemFont(16)
+    return headerRow;
+}
+
+function addChartBlockTo(view, trendtitle, chartdata, alignLeft = true, color = false) {
+    let block = view.addStack()
+    block.layoutVertically()
+    block.size = new Size(58, 24)
+
+    let textRow = block.addStack()
+    if (!alignLeft) textRow.addSpacer()
+    let chartText = textRow.addText(trendtitle)
+    if (alignLeft) textRow.addSpacer()
+    chartText.font = Font.mediumSystemFont(10)
+    if (color !== false) chartText.textColor = color
+
+    let graphImg = generateGraph(chartdata, 58, 10, alignLeft).getImage()
+    let chartImg = block.addImage(graphImg)
+    chartImg.resizable = false
+}
+
+function generateGraph(data, width, height, alignLeft = true) {
+    let context = new DrawContext()
+    context.size = new Size(width, height)
+    context.opaque = false
+    let min = Math.min(...data)
+    let max = Math.max(...data) - min
+    let w = Math.round((width - (data.length * 2)) / data.length)
+    let xOffset = (!alignLeft) ? (width - (data.length * (w + 1))) : 0
+    data.forEach((value, index) => {
+        let h = Math.max(2, Math.round((value - min) / max * height))
+        let x = xOffset + (w + 1) * index
+        let rect = new Rect(x, 0, w, h)
+        context.setFillColor(getIncidenceColor(value))
+        context.fillRect(rect)
+    })
+    return context
+}
+
+async function getLocation(staticCoordinateIndex = false) {
     try {
+        if (staticCoordinates && typeof staticCoordinates[staticCoordinateIndex] !== 'undefined' && Object.keys(staticCoordinates[staticCoordinateIndex]).length >= 3) {
+            return staticCoordinates[staticCoordinateIndex]
+        } else {
+            Location.setAccuracyToThreeKilometers()
+            return await Location.current()
+        }
+    } catch (e) {
+        return null;
+    }
+}
+
+async function getData(useStaticCoordsIndex = false) {
+    let rValue = 0
+    try {
+        rValue = await getRValue()
+    } catch(e){}
+  
+    try {
+      
         let dataCases = await new Request(apiUrlNewCases).loadJSON()
         const cases = dataCases.features[0].attributes.value
-
         let dataStates = await new Request(apiUrlStates).loadJSON()
-        const incidencePerState = dataStates.features.map((f) => { return { 
-            BL: BUNDESLAENDER_SHORT[f.attributes.LAN_ew_GEN], 
+        const incidencePerState = dataStates.features.map((f) => { return {
+            BL: BUNDESLAENDER_SHORT[f.attributes.LAN_ew_GEN],
             incidence: f.attributes.cases7_bl_per_100k,
-            cases: f.attributes.Fallzahl // ???
+            cases: f.attributes.Fallzahl
         }})
 
         const averageIncidence = incidencePerState.reduce((a, b) => a + b.incidence, 0) / incidencePerState.length
-        const location = await getLocation(useFixedCoordsIndex)
+        const location = await getLocation(useStaticCoordsIndex)
         let data = await new Request(apiUrl(location)).loadJSON()
         const attr = data.features[0].attributes
         const res = {
@@ -178,235 +362,26 @@ async function getData(useFixedCoordsIndex = false) {
             updated: attr.last_update,
             incidencePerState: incidencePerState,
             averageIncidence: parseFloat(averageIncidence.toFixed(1)),
-            cases: cases
+            cases: cases,
+            r: rValue,
+            blockPosition: useStaticCoordsIndex
         }
-        return res
+        return saveLoadData(res)
     } catch (e) {
         return null
     }
 }
 
-function parseInput (input) {
-    const _coords = []
-    const _fixedCoordinates = input.split(";").map(coords => {
-        return coords.split(',')
-    })
-
-    _fixedCoordinates.forEach(coords => {
-        _coords[parseInt(coords[0])] = {
-            index: parseInt(coords[0]),
-            latitude: parseFloat(coords[1]),
-            longitude: parseFloat(coords[2]),
-            name: (typeof coords[3] !== 'undefined') ? coords[3] : false
+async function getRValue() {
+    const rDataStr = await new Request(apiRUrl).loadString()
+    const rData = parseRCSV(rDataStr)
+    let lastR = 0
+    rData.forEach(item => {
+        if (typeof item['Schätzer_7_Tage_R_Wert'] !== 'undefined' && parseFloat(item['Schätzer_7_Tage_R_Wert']) > 0) {
+            lastR = item;
         }
-    })
-
-    return _coords
-  }
-
-async function getLocation(fixedCoordinateIndex = false) {
-    try {
-        if (fixedCoordinates && typeof fixedCoordinates[fixedCoordinateIndex] !== 'undefined' && Object.keys(fixedCoordinates[fixedCoordinateIndex]).length >= 3) {
-            return fixedCoordinates[fixedCoordinateIndex]
-        } else {
-            Location.setAccuracyToThreeKilometers()
-            return await Location.current()
-        }
-    } catch (e) {
-        return null;
-    }
-}
-
-function createGerTopDailyCasesLabel(label, data, weekData) {
-    let casesStack = label.addStack()
-    casesStack.layoutHorizontally()
-    casesStack.centerAlignContent()
-    casesStack.setPadding(4,4,4,4)
-    casesStack.cornerRadius = 6
-
-    let formatedCases = formatCases(data.cases)
-    const prevData = getDataForDate(weekData);
-    if (prevData) {
-        formatedCases += getTrendArrow(prevData.cases, data.cases)
-    }
-
-    createUpdatedLabel(casesStack, data)
-
-    let labelCases = casesStack.addText(`(+${formatedCases})`)
-    labelCases.rightAlignText()
-    labelCases.font = Font.systemFont(10)
-}
-
-function createGerDailyCasesLabel(label, data, weekData) {
-    let bgColor = new Color('f0f0f0')
-    let textColor = new Color('444444')
-    if(Device.isUsingDarkAppearance()) {
-        bgColor = new Color('202020')
-        textColor = new Color('f0f0f0')
-    }
-
-    let fontsize = MEDIUMWIDGET ? 10 : 9
-    let formatedCasesArea = ''
-    let formatedCasesBL = ''
-    let formatedCases = formatCases(data.cases)
-
-    const prevData = getDataForDate(weekData);
-    if (prevData) {
-        formatedCases += getTrendArrow(prevData.cases, data.cases)
-        formatedCasesArea = getNewAreaCasesAndTrend(data, weekData)
-        formatedCasesBL = getNewBLCasesAndTrend(data, weekData)
-    }
-
-    let casesStack = label.addStack()
-    casesStack.layoutHorizontally()
-    casesStack.centerAlignContent()
-    casesStack.setPadding(4,3,4,3)
-    casesStack.cornerRadius = 6
-    casesStack.backgroundColor = bgColor
-
-    casesStack.size = (MEDIUMWIDGET) ? new Size(140, 15) : new Size(132, 15)
-
-    let labelCases = casesStack.addText(`${formatedCasesArea}`)
-    labelCases.font = Font.systemFont(fontsize)
-    labelCases.textColor = textColor
-
-
-    casesStack.addSpacer()
-    let labelCases2 = casesStack.addText(`${formatedCasesBL}`)
-    labelCases2.centerAlignText()
-    labelCases2.font = Font.systemFont(fontsize)
-    labelCases2.textColor = textColor
-
-    // GER CASES
-    if (!MEDIUMWIDGET) {
-        casesStack.addSpacer()
-        let labelCases3 = casesStack.addText(`+${formatedCases}`)
-        labelCases3.rightAlignText()
-        labelCases3.font = Font.systemFont(fontsize)
-        labelCases3.textColor = textColor
-    }
-}
-
-function formatCases(cases) {
-    return formatedCases = new Number(cases).toLocaleString('de-DE')
-}
-
-function getTrendArrow (preValue, currentValue) {
-    return (currentValue <= preValue) ? '↓' : '↑'
-}
-
-function createUpdatedLabel(label, data, align = 1) {
-    const areaCasesLabel = label.addText(`${data.updated.substr(0, 10)} `)
-    areaCasesLabel.font = Font.systemFont(10)
-    if (align === -1) { areaCasesLabel.rightAlignText() } else { areaCasesLabel.leftAlignText() }
-}
-
-function createIncidenceLabelBlock(labelBlock, data, weekData, fixedCoordinateIndex = 0) {
-    const stack = labelBlock.addStack()
-    stack.layoutVertically()
-    stack.useDefaultPadding()
-    stack.topAlignContent()
-
-    // DATE
-    if (!MEDIUMWIDGET) {
-        createUpdatedLabel(stack, data)
-    }
-
-    // MAIN ROW WITH INCIDENCE
-    const stackMainRow = stack.addStack()
-    stackMainRow.useDefaultPadding()
-    stackMainRow.centerAlignContent()
-    stackMainRow.size = (MEDIUMWIDGET) ? new Size(145, 30) : new Size(135, 30)
-
-    // MAIN INCIDENCE
-    let incidence = data.incidence >= 100 ? Math.round(data.incidence) : data.incidence;
-    const incidenceLabel = stackMainRow.addText('' + incidence)
-    incidenceLabel.font = Font.boldSystemFont(27)
-    incidenceLabel.leftAlignText();
-    incidenceLabel.textColor = getIncidenceColor(data.incidence)
-
-    const incidenceTrend = getIncidenceTrend(data, weekData)
-    const incidenceLabelTrend = stackMainRow.addText(incidenceTrend)
-    incidenceLabelTrend.font = Font.boldSystemFont(27)
-    incidenceLabelTrend.leftAlignText();
-    incidenceLabelTrend.textColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
-
-    stackMainRow.addSpacer(5)
-
-    // BL INCIDENCE
-    const incidenceBLStack = stackMainRow.addStack();
-    incidenceBLStack.backgroundColor = new Color('f0f0f0')
-    incidenceBLStack.cornerRadius = 4
-    incidenceBLStack.setPadding(2,3,2,3)
-
-    const incidenceBL = (data.incidenceBL >= 100) ? Math.round(data.incidenceBL) : data.incidenceBL
-    const incidenceBLLabel = incidenceBLStack.addText(incidenceBL + getIncidenceBLTrend(data, weekData) + '\n' + data.nameBL)
-    incidenceBLLabel.font = Font.mediumSystemFont(9)
-    incidenceBLLabel.textColor = new Color('444444')
-
-    stackMainRow.addSpacer()
-
-    let areaName = data.areaName
-    if (typeof fixedCoordinates[fixedCoordinateIndex] !== 'undefined' && fixedCoordinates[fixedCoordinateIndex].name !== false) {
-        areaName = fixedCoordinates[fixedCoordinateIndex].name
-    }
-    const areanameLabel = stack.addText(areaName.toUpperCase())
-    areanameLabel.font = Font.mediumSystemFont(14)
-    areanameLabel.lineLimit = 2
-
-    stack.addSpacer()
-    createGraph(stack, weekData)
-    stack.addSpacer(4)
-
-    createGerDailyCasesLabel(stack, data, weekData)
-}
-
-function createGraph(row, weekData) {
-    let graphRow = row.addStack()
-    graphRow.centerAlignContent()
-    graphRow.useDefaultPadding()
-    graphRow.size = (MEDIUMWIDGET) ? new Size(145, 10) : new Size(135, 10)    
-
-    let incidenceColumnData = []
-    let incidenceColumnBLData = []
-    let incidenceColumnGerData = []
-
-    Object.keys(weekData).forEach(key => {
-        incidenceColumnData.push(weekData[key].incidence)
-        incidenceColumnBLData.push(weekData[key].incidenceBL)
-        if (!MEDIUMWIDGET) {
-            incidenceColumnGerData.push(weekData[key].averageIncidence)
-        }
-    })
-    incidenceColumnData.push(0)
-    incidenceColumnData = incidenceColumnData.concat(incidenceColumnBLData)
-    if (!MEDIUMWIDGET) {
-        incidenceColumnData.push(0)
-        incidenceColumnData = incidenceColumnData.concat(incidenceColumnGerData)    
-    }
-
-    let w = (MEDIUMWIDGET) ? 135 : 125
-    let image = columnGraph(incidenceColumnData, w, 15).getImage()
-    let img = graphRow.addImage(image)
-    img.resizable = false;
-    img.centerAlignImage();
-}
-
-function columnGraph(data, width, height) {
-    let context = new DrawContext()
-    context.size = new Size(width, height)
-    context.opaque = false
-    let max = Math.max(...data)
-    data.forEach((value, index) => {
-        context.setFillColor(getIncidenceColor(value))
-        let w = (width / data.length) - 2
-        let h = value / max * height
-        let x = (w + 2) * index
-        let y = height - h
-        let rect = new Rect(x, y, w, h)
-        context.fillRect(rect)
-    })
-    return context
+    })    
+    return (lastR) ? parseFloat(lastR['Schätzer_7_Tage_R_Wert'].replace(',','.')) : lastR
 }
 
 function getIncidenceColor(incidence) {
@@ -419,159 +394,91 @@ function getIncidenceColor(incidence) {
         color = LIMIT_ORANGE_COLOR
     } else if (incidence >= LIMIT_YELLOW) {
         color = LIMIT_YELLOW_COLOR
+    } else if (incidence === 0) {
+        color = LIMIT_GRAY_COLOR
     }
     return color
 }
 
-function getIncidenceTrend(data, weekData) {
-    let incidenceTrend = ' ';
-    if (typeof weekData !== 'undefined' && Object.keys(weekData).length > 0) {
-        const prevData = getDataForDate(weekData);
-        if (prevData) {
-            incidenceTrend = (data.incidence < prevData.incidence) ? '↓' : (data.incidence > prevData.incidence) ? '↑' : '→'
-        }
-    }
-    return incidenceTrend
-}
-
-function getNewAreaCasesAndTrend(data, weekData) {
-    let newAreaCases = '';
-    if (typeof weekData !== 'undefined' && Object.keys(weekData).length > 0) {
-        const prev1DayData = getDataForDate(weekData);
-        if (prev1DayData && typeof prev1DayData.areaCases !== 'undefined') {
-            newAreaCases += (data.areaCases < prev1DayData.areaCases) ?'-' : '+'
-            newAreaCases += formatCases(Math.abs(getDiff(data, prev1DayData, 'areaCases')))
-
-            const prev2DaysData = getDataForDate(weekData, 2);
-            if (prev2DaysData && typeof prev2DaysData.areaCases !== 'undefined') {
-                const diffPrev1Day = getDiff(data, prev1DayData, 'areaCases')
-                const diffPrev2Days = getDiff(prev1DayData, prev2DaysData, 'areaCases')
-                if (diffPrev1Day || diffPrev2Days) {
-                    newAreaCases += (diffPrev1Day > diffPrev2Days) ?'↑' : '↓'
-                } else {
-                    newAreaCases += '→'
-                }
-            }
-        }
-    }
-    return newAreaCases
-}
-
-function getDiff(data, data2, field) {
-    if (typeof data[field] !== 'undefined' && typeof data2[field] !== 'undefined') {
-        return data[field] - data2[field]
-    }
-    return 0
-}
-
-function getNewBLCasesAndTrend(data, weekData) {
-    let newBLCases = ''
-    let d = data.incidencePerState.filter((item) => {
-        return item.BL === data.nameBL
+function parseInput (input) {
+    const _coords = []
+    const _staticCoordinates = input.split(";").map(coords => {
+        return coords.split(',')
     })
-    let currentBLData = (typeof d[0] !== 'undefined') ? d[0] : null
-    const prev1DayData = getDataForDate(weekData);
-    let dp = prev1DayData.incidencePerState.filter((item) => {
-        return item.BL === data.nameBL
+    _staticCoordinates.forEach(coords => {
+        _coords[parseInt(coords[0])] = {
+            index: parseInt(coords[0]),
+            latitude: parseFloat(coords[1]),
+            longitude: parseFloat(coords[2]),
+            name: (coords[3]) ? coords[3] : false
+        }
     })
-    let prev1DayBLData = (typeof dp[0] !== 'undefined') ? dp[0] : null
-    if(currentBLData && prev1DayBLData) {
-        newBLCases += (currentBLData.cases < prev1DayBLData.cases) ?'-' : '+'
-        newBLCases += formatCases(Math.abs(currentBLData.cases - prev1DayBLData.cases))
-
-        const prev2DaysData = getDataForDate(weekData, 2);
-        if (prev2DaysData) {
-            let dp = prev2DaysData.incidencePerState.filter((item) => {
-                return item.BL === data.nameBL
-            })
-            let prev2DaysBLData = (typeof dp[0] !== 'undefined') ? dp[0] : null
-            if (prev2DaysBLData) {
-                const diffPrev1Day = getDiff(currentBLData, prev1DayBLData, 'cases')
-                const diffPrev2Days = getDiff(prev1DayBLData, prev2DaysBLData, 'cases')
-                if (diffPrev1Day || diffPrev2Days) {
-                    newBLCases += (diffPrev1Day > diffPrev2Days) ?'↑' : '↓'
-                } else {
-                    newBLCases += '→'
-                }
-            }
-        }
-    }
-    return newBLCases
+    return _coords
 }
 
-function getIncidenceBLTrend(data, weekData) {
-    let incidenceBLTrend = '';    
-    if (typeof weekData !== 'undefined' && Object.keys(weekData).length > 0) {
-        const prevData = getDataForDate(weekData);
-        if (prevData) {
-            incidenceBLTrend = (data.incidenceBL < prevData.incidenceBL) ? '↓' : (data.incidenceBL > prevData.incidenceBL) ? '↑' : '→'
-        }
-    }
-    return incidenceBLTrend
-}
-
-function getDataForDate(weekData, dayOffset = 1) {
-    let dateKey;
+function getDataForDate(data, dayOffset = 0) {
     const today = new Date();
     const todayDateKey = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
-    if (typeof weekData[todayDateKey] === 'undefined') {
-        dayOffset = dayOffset + 1
-    }
-
+    dayOffset = (typeof data[todayDateKey] === 'undefined') ? dayOffset + 1 : dayOffset
     today.setDate(today.getDate() - dayOffset);
-    dateKey = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
-
-    if (typeof weekData[dateKey] !== 'undefined') {
-        return weekData[dateKey]
-    }
-    return false
+    let dateKey = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
+    return (data[dateKey]) ? data[dateKey] : false
 }
 
-// LIMIT TO 7 DAYS
-function saveLoadData (newData, suffix = '') {
-    const updated = newData.updated.substr(0, 10);
-    const loadedData = loadData(suffix)
-    if (loadedData) {
-        loadedData[updated] = newData
-
-        const loadedDataKeys = Object.keys(loadedData);
-        const lastDaysKeys = loadedDataKeys.slice(Math.max(Object.keys(loadedData).length - 7, 0))
-
-        let loadedDataLimited = {}
-        lastDaysKeys.forEach(key => {
-            loadedDataLimited[key] = loadedData[key]
-        })
-
-        try {
-            let fm = FileManager.iCloud()
-            let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + suffix + '.json')
-            fm.writeString(path, JSON.stringify(loadedDataLimited))
-        } catch (e) {
-            let fm = FileManager.local()
-            let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + suffix + '.json')
-            fm.writeString(path, JSON.stringify(loadedDataLimited))
-        }
-
-        return loadedData
-    }
-    return {}
-}
-
-function loadData(suffix) {
+function saveLoadData (data) {
+    const loadedData = loadData(data.areaName)
+    loadedData[data.updated.substr(0, 10)] = data
+    const loadedDataKeys = Object.keys(loadedData);
+    const lastDaysKeys = loadedDataKeys.slice(Math.max(Object.keys(loadedData).length - 7, 0))
+    let loadedDataLimited = {}
+    lastDaysKeys.forEach(key => {
+        loadedDataLimited[key] = loadedData[key]
+    })
+    let fm = null
     try {
-        let fm = FileManager.iCloud()
-        let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + suffix + '.json')
-        if (fm.fileExists(path)) {
-            let data = fm.readString(path)
-            return JSON.parse(data)
-        }
+        fm = FileManager.iCloud()
     } catch (e) {
-        let fm = FileManager.local()
-        let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + suffix + '.json')
-        if (fm.fileExists(path)) {
-            let data = fm.readString(path)
-            return JSON.parse(data)
-        }
+        fm = FileManager.local()
+    }
+    let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + data.areaName + '.json')
+    fm.writeString(path, JSON.stringify(loadedDataLimited))
+    return loadedData
+}
+
+function loadData(areaName) {
+    let fm 
+    try {
+        fm = FileManager.iCloud()
+    } catch (e) {
+        fm = FileManager.local()
+    }
+    let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + areaName + '.json')
+    if (fm.fileExists(path)) {
+        if (fm.downloadFileFromiCloud) fm.downloadFileFromiCloud(path)
+        return JSON.parse(fm.readString(path))
     }
     return {};
+}
+
+function parseRCSV(rDataStr) {
+    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0});
+    let headers = lines.splice(0, 1)[0].split(";");
+    let valuesRegExp = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\";]+)/g;
+    let elements = [];
+    for (let i = 0; i < lines.length; i++) {
+        let element = {};
+        let j = 0;
+        while (matches = valuesRegExp.exec(lines[i])) {
+            var value = matches[1] || matches[2];
+            value = value.replace(/\"\"/g, "\"");
+            element[headers[j]] = value;
+            j++;
+        }
+        elements.push(element);
+    }
+    return elements
+}
+
+function LOG(...data) {
+    console.log(data.map(JSON.stringify).join(' | '))
 }
