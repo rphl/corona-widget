@@ -235,7 +235,6 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     addLabelTo(incidenceBLStack, todayData.nameBL, Font.mediumSystemFont(9), '444444')
 
     stackMainRow.addSpacer()
-    stackMainRow.addSpacer()
 
     let areaName = todayData.areaName
     if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
