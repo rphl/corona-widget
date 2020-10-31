@@ -434,24 +434,15 @@ async function saveLoadData (dataId, data) {
     lastDaysKeys.forEach(key => {
         loadedDataLimited[key] = loadedData[key]
     })
-    let fm = null
-    try {
-        fm = FileManager.iCloud()
-    } catch (e) {
-        fm = FileManager.local()
-    }
+    let fm = getFilemanager()
     let path = fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
     fm.writeString(path, JSON.stringify(loadedDataLimited))
     return loadedData
 }
 
 async function loadData(dataId, oldAreaName) {
-    let fm 
-    try {
-        fm = FileManager.iCloud()
-    } catch (e) {
-        fm = FileManager.local()
-    }
+    let fm = getFilemanager()
+    
     let oldPath = fm.joinPath(fm.documentsDirectory(), 'covid19' + oldAreaName + '.json')
     let path = fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
     if (fm.isFileStoredIniCloud(oldPath) && !fm.isFileDownloaded(oldPath)) {
@@ -463,6 +454,23 @@ async function loadData(dataId, oldAreaName) {
         await fm.downloadFileFromiCloud(path)
     }
     return (fm.fileExists(path)) ? JSON.parse(fm.readString(path)) : {}
+}
+
+function getFilemanager() {
+    let fm 
+    try {
+        fm = FileManager.iCloud()
+    } catch (e) {
+        fm = FileManager.local()
+    }
+    
+    // check if user logged in iCloud
+    try { 
+        fm.documentsDirectory()
+    } catch(e) {
+        fm = FileManager.local()
+    }
+    return fm
 }
 
 function parseRCSV(rDataStr) {
