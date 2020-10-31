@@ -85,7 +85,7 @@ async function createWidget() {
     if (data) {
         headerRow.addSpacer(3)
         let todayData = getDataForDate(data)
-        addLabelTo(headerRow, 'R ' + todayData.r, Font.mediumSystemFont(14))
+        addLabelTo(headerRow, 'R ' + formatNumber(todayData.r), Font.mediumSystemFont(14))
         headerRow.addSpacer()
     
         let chartdata = getChartData(data, 'averageIncidence');
