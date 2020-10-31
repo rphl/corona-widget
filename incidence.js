@@ -211,14 +211,14 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
 
     // === INCIDENCE
     const incidence = (todayData.incidence >= 100) ? Math.round(todayData.incidence) : todayData.incidence;
-    addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(incidence))
+    addLabelTo(stackMainRow, formatNumber(incidence), Font.boldSystemFont(27), getIncidenceColor(incidence))
     
     if (yesterdayData) {
         const incidenceTrend = getTrendArrow(todayData.incidence, yesterdayData.incidence);
         const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
         addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
     }
-    stackMainRow.addSpacer(5)
+    stackMainRow.addSpacer(4)
 
     // === BL INCIDENCE
     const incidenceBLStack = stackMainRow.addStack();
@@ -228,19 +228,20 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     incidenceBLStack.setPadding(2,3,2,3)
 
     let incidenceBL = (todayData.incidenceBL >= 100) ? Math.round(todayData.incidenceBL) : todayData.incidenceBL;
+    incidenceBL = formatNumber(incidenceBL)
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.incidenceBL, yesterdayData.incidenceBL)
     }
     addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
     addLabelTo(incidenceBLStack, todayData.nameBL, Font.mediumSystemFont(9), '444444')
 
-    stackMainRow.addSpacer()
-
     let areaName = todayData.areaName
     if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
         areaName = staticCoordinates[useStaticCoordsIndex].name
     }
-    const areanameLabel = addLabelTo(stackMainRowBox, areaName.toUpperCase(), Font.mediumSystemFont(14), Color.white())
+    // @TODO WORKAROUND FÜR DIE STACKBREITE ENTFERNEN
+    areaName = areaName.toUpperCase().padEnd(50, ' ')
+    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14), Color.white())
     areanameLabel.lineLimit = 1
     stackMainRowBox.addSpacer(0)
 }
