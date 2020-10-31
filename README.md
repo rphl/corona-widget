@@ -8,11 +8,15 @@
 
 ---
 
-_Einen Kaffee ausgeben 🙃: https://ko-fi.com/rapha_
+_Einen Kaffee ausgeben? 🙃: https://ko-fi.com/rapha_
 
 ---
 
 **Updates**
+
+***31.10.2020***
+* Support für Stadt und Landkreis mit den gleichen Namen (JSON werden jetzt unter eindeutiger ID gespeichert, nicht den Stadtnamen) Bereits vorhandene JSON werden migriert ( Evtl Sicherheitskopie vor Update erstellen) #7
+
 ***30.10.2020***
 * Neues Layout
 * Reproduktionszahl im Widget
