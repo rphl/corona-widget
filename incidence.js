@@ -211,14 +211,14 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
 
     // === INCIDENCE
     const incidence = (todayData.incidence >= 100) ? Math.round(todayData.incidence) : todayData.incidence;
-    addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(incidence))
+    addLabelTo(stackMainRow, formatNumber(incidence), Font.boldSystemFont(27), getIncidenceColor(incidence))
     
     if (yesterdayData) {
         const incidenceTrend = getTrendArrow(todayData.incidence, yesterdayData.incidence);
         const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
         addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
     }
-    stackMainRow.addSpacer(5)
+    stackMainRow.addSpacer(4)
 
     // === BL INCIDENCE
     const incidenceBLStack = stackMainRow.addStack();
@@ -229,6 +229,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
 
     let incidenceBL = (todayData.incidenceBL >= 100) ? Math.round(todayData.incidenceBL) : todayData.incidenceBL;
     if (yesterdayData) {
+        incidenceBL = formatNumber(incidenceBL)
         incidenceBL += getTrendArrow(todayData.incidenceBL, yesterdayData.incidenceBL)
     }
     addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
