@@ -12,6 +12,9 @@ const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/
 const apiUrlNewCases = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
 const apiRUrl = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
 
+// to disable the new layout, set enableNewLayout to false
+const enableNewLayout = true
+
 /**
  * Fix Coordinates/MediumWidget
  * Set Widgetparameter for each column, seperated by ";" Format: POSITION,LAT,LONG(,NAME);POSITION,LAT,LONG(,NAME)
@@ -176,10 +179,10 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
 
     const incidenceBlock = incidenceBlockBox.addStack()
     incidenceBlock.cornerRadius = 12
-    incidenceBlock.backgroundColor = new Color('1a1a1a')
+    if (enableNewLayout) incidenceBlock.backgroundColor = new Color('1a1a1a')
     
     const incidenceBlockRows = incidenceBlock.addStack()
-    incidenceBlockRows.backgroundColor = new Color('1a1a1a')
+    if (enableNewLayout) incidenceBlockRows.backgroundColor = new Color('1a1a1a')
     incidenceBlockRows.layoutVertically()
 
     addIncidence(incidenceBlockRows, data, useStaticCoordsIndex)
@@ -193,7 +196,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     const todayData = getDataForDate(data)
     const yesterdayData = getDataForDate(data, 1)
     const stackMainRowBox = view.addStack()
-    stackMainRowBox.backgroundColor = new Color('292929')
+    if (enableNewLayout) stackMainRowBox.backgroundColor = new Color('292929')
     stackMainRowBox.layoutVertically()
     stackMainRowBox.setPadding(6,8,6,8)
     stackMainRowBox.cornerRadius = 10
@@ -241,7 +244,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     }
     // @TODO WORKAROUND FÜR DIE STACKBREITE ENTFERNEN
     areaName = areaName.toUpperCase().padEnd(50, ' ')
-    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14), Color.white())
+    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14), (enableNewLayout) ? Color.white() : false)
     areanameLabel.lineLimit = 1
     stackMainRowBox.addSpacer(0)
 }
@@ -267,11 +270,11 @@ function addTrendsBarToIncidenceBlock(view, data) {
     trendsBarBox.layoutHorizontally()
     let chartdata = getChartData(data, 'incidence')
     // chartdata = [4,32,40,50,101,55,20] // DEMO!!!
-    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'areaCases', true), chartdata, true, Color.white())
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'areaCases', true), chartdata, true, (enableNewLayout) ? Color.white() : false)
     trendsBarBox.addSpacer()    
     let chartdataBL = getChartData(data, 'incidenceBL')
     // chartdataBL = [4,28,35,51,75,105,60] // DEMO!!!
-    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'cases', true, true), chartdataBL, false, Color.white())
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'cases', true, true), chartdataBL, false, (enableNewLayout) ? Color.white() : false)
 }
 
 function addHeaderRowTo(view) {
