@@ -5,7 +5,7 @@
 // BASE VERSION FORKED FROM AUTHOR: kevinkub https://gist.github.com/kevinkub/46caebfebc7e26be63403a7f0587f664
 // UPDATED VERSION BY AUTHOR: rphl https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5
 
-const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL';
+const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS';
 const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
 const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
 const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
@@ -111,7 +111,7 @@ async function createWidget() {
         list.addSpacer()
         let errorBox = list.addStack()
         errorBox.setPadding(10, 10, 10, 10)
-        addLabelTo(errorBox, "⚡️Daten konnten nicht geladen werden. Widget öffnen für reload", Font.mediumSystemFont(10), Color.gray())
+        addLabelTo(errorBox, "⚡️ Daten konnten nicht geladen werden. Widget öffnen für reload", Font.mediumSystemFont(10), Color.gray())
     }
     return list
 }
@@ -338,9 +338,9 @@ async function getData(useStaticCoordsIndex = false) {
     } catch(e){}
   
     try {
-      
         let dataCases = await new Request(apiUrlNewCases).loadJSON()
         const cases = dataCases.features[0].attributes.value
+
         let dataStates = await new Request(apiUrlStates).loadJSON()
         const incidencePerState = dataStates.features.map((f) => { return {
             BL: BUNDESLAENDER_SHORT[f.attributes.LAN_ew_GEN],
@@ -366,7 +366,7 @@ async function getData(useStaticCoordsIndex = false) {
             r: rValue,
             blockPosition: useStaticCoordsIndex
         }
-        return saveLoadData(res)
+        return await saveLoadData(attr.RS, res)
     } catch (e) {
         return null
     }
@@ -425,8 +425,8 @@ function getDataForDate(data, dayOffset = 0) {
     return (data[dateKey]) ? data[dateKey] : false
 }
 
-function saveLoadData (data) {
-    const loadedData = loadData(data.areaName)
+async function saveLoadData (dataId, data) {
+    const loadedData = await loadData(dataId, data.areaName)
     loadedData[data.updated.substr(0, 10)] = data
     const loadedDataKeys = Object.keys(loadedData);
     const lastDaysKeys = loadedDataKeys.slice(Math.max(Object.keys(loadedData).length - 7, 0))
@@ -440,24 +440,29 @@ function saveLoadData (data) {
     } catch (e) {
         fm = FileManager.local()
     }
-    let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + data.areaName + '.json')
+    let path = fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
     fm.writeString(path, JSON.stringify(loadedDataLimited))
     return loadedData
 }
 
-function loadData(areaName) {
+async function loadData(dataId, oldAreaName) {
     let fm 
     try {
         fm = FileManager.iCloud()
     } catch (e) {
         fm = FileManager.local()
     }
-    let path = fm.joinPath(fm.documentsDirectory(), 'covid19' + areaName + '.json')
-    if (fm.fileExists(path)) {
-        if (fm.downloadFileFromiCloud) fm.downloadFileFromiCloud(path)
-        return JSON.parse(fm.readString(path))
+    let oldPath = fm.joinPath(fm.documentsDirectory(), 'covid19' + oldAreaName + '.json')
+    let path = fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
+    if (fm.isFileStoredIniCloud(oldPath) && !fm.isFileDownloaded(oldPath)) {
+        await fm.downloadFileFromiCloud(oldPath)
     }
-    return {};
+    // MOVE OLD FILE TO NEW ID NAME
+    if (fm.fileExists(oldPath) && !fm.fileExists(path)) fm.move(oldPath, path)
+    if (fm.isFileStoredIniCloud(path) && !fm.isFileDownloaded(path)) {
+        await fm.downloadFileFromiCloud(path)
+    }
+    return (fm.fileExists(path)) ? JSON.parse(fm.readString(path)) : {}
 }
 
 function parseRCSV(rDataStr) {
