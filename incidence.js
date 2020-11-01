@@ -5,6 +5,12 @@
 // BASE VERSION FORKED FROM AUTHOR: kevinkub https://gist.github.com/kevinkub/46caebfebc7e26be63403a7f0587f664
 // UPDATED VERSION BY AUTHOR: rphl https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5
 
+// ============= KONFIGURATION =============
+
+const CONFIG_OPEN_URL = false
+
+// ============= ============= =============
+
 const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS';
 const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
 const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
@@ -104,7 +110,7 @@ async function createWidget() {
             const data1 = await getData(1)
             addIncidenceBlockTo(incidenceRow, data1, [2,padding,10,10], 1)
         }
-        list.url = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4"
+        if (CONFIG_OPEN_URL) list.url = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4"
         list.refreshAfterDate = new Date(Date.now() + 60 * 60 * 1000)
     } else {
         headerRow.addSpacer()
@@ -172,19 +178,23 @@ function getChartData (data, field) {
 
 function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
     const incidenceBlockBox = view.addStack()
-    incidenceBlockBox.setPadding(padding[0], padding[1], padding[2], padding[3])
-
-    const incidenceBlock = incidenceBlockBox.addStack()
-    incidenceBlock.cornerRadius = 12
-    incidenceBlock.backgroundColor = new Color('1a1a1a')
+    incidenceBlockBox.setPadding(padding[0], 0, padding[2], 0)
+    incidenceBlockBox.layoutHorizontally()
     
-    const incidenceBlockRows = incidenceBlock.addStack()
-    incidenceBlockRows.backgroundColor = new Color('1a1a1a')
+    incidenceBlockBox.addSpacer(padding[1])
+    
+    const incidenceBlockRows = incidenceBlockBox.addStack()
+
+    incidenceBlockRows.backgroundColor = new Color('1a1a1a', 0.8)
+    incidenceBlockRows.setPadding(0,0,0,0)
+    incidenceBlockRows.cornerRadius = 20
     incidenceBlockRows.layoutVertically()
 
     addIncidence(incidenceBlockRows, data, useStaticCoordsIndex)
     addTrendsBarToIncidenceBlock(incidenceBlockRows, data)
     incidenceBlockRows.addSpacer(2)
+    
+    incidenceBlockBox.addSpacer(padding[3])
     
     return incidenceBlockBox;
 }
@@ -192,11 +202,16 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
 function addIncidence(view, data, useStaticCoordsIndex = false) {
     const todayData = getDataForDate(data)
     const yesterdayData = getDataForDate(data, 1)
-    const stackMainRowBox = view.addStack()
-    stackMainRowBox.backgroundColor = new Color('292929')
+    
+    const incidenceBox = view.addStack()
+    incidenceBox.setPadding(6,8,6,8)
+    incidenceBox.cornerRadius = 12
+    incidenceBox.backgroundColor = new Color('ffffff', 0.1)
+    incidenceBox.layoutHorizontally()
+    
+    
+    const stackMainRowBox = incidenceBox.addStack()
     stackMainRowBox.layoutVertically()
-    stackMainRowBox.setPadding(6,8,6,8)
-    stackMainRowBox.cornerRadius = 10
     stackMainRowBox.addSpacer(0)
 
     if (todayData.blockPosition === 0) {
@@ -495,3 +510,6 @@ function parseRCSV(rDataStr) {
 function LOG(...data) {
     console.log(data.map(JSON.stringify).join(' | '))
 }
+
+
+
