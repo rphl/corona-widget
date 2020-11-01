@@ -187,7 +187,7 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
 
     incidenceBlockRows.backgroundColor = new Color('1a1a1a', 0.8)
     incidenceBlockRows.setPadding(0,0,0,0)
-    incidenceBlockRows.cornerRadius = 20
+    incidenceBlockRows.cornerRadius = 14
     incidenceBlockRows.layoutVertically()
 
     addIncidence(incidenceBlockRows, data, useStaticCoordsIndex)
@@ -214,7 +214,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     stackMainRowBox.layoutVertically()
     stackMainRowBox.addSpacer(0)
 
-    if (todayData.blockPosition === 0) {
+    if (useStaticCoordsIndex === 0) {
         const dateStr = todayData.updated.substr(0, 10)
         addLabelTo(stackMainRowBox, dateStr, Font.mediumSystemFont(10), Color.gray())
         stackMainRowBox.addSpacer(0)
@@ -433,10 +433,15 @@ function parseInput (input) {
 
 function getDataForDate(data, dayOffset = 0) {
     const today = new Date();
-    const todayDateKey = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
+    let todayDay = ('' + today.getDate()).padStart(2, '0')
+    let todayMonth = ('' + (today.getMonth() + 1)).padStart(2, '0')
+    const todayDateKey = `${todayDay}.${todayMonth}.${today.getFullYear()}`
     dayOffset = (typeof data[todayDateKey] === 'undefined') ? dayOffset + 1 : dayOffset
     today.setDate(today.getDate() - dayOffset);
-    let dateKey = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
+    todayDay = ('' + today.getDate()).padStart(2, '0')
+    todayMonth = ('' + (today.getMonth() + 1)).padStart(2, '0')
+    let dateKey = `${todayDay}.${todayMonth}.${today.getFullYear()}`
+
     return (data[dateKey]) ? data[dateKey] : false
 }
 
