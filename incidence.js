@@ -185,7 +185,7 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
     
     const incidenceBlockRows = incidenceBlockBox.addStack()
 
-    incidenceBlockRows.backgroundColor = new Color('1a1a1a', 0.8)
+    incidenceBlockRows.backgroundColor = new Color('cccccc', 0.1)
     incidenceBlockRows.setPadding(0,0,0,0)
     incidenceBlockRows.cornerRadius = 14
     incidenceBlockRows.layoutVertically()
@@ -206,7 +206,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     const incidenceBox = view.addStack()
     incidenceBox.setPadding(6,8,6,8)
     incidenceBox.cornerRadius = 12
-    incidenceBox.backgroundColor = new Color('ffffff', 0.1)
+    incidenceBox.backgroundColor = new Color('999999', 0.1)
     incidenceBox.layoutHorizontally()
     
     const stackMainRowBox = incidenceBox.addStack()
@@ -215,7 +215,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
 
     if (useStaticCoordsIndex === 0) {
         const dateStr = todayData.updated.substr(0, 10)
-        addLabelTo(stackMainRowBox, dateStr, Font.mediumSystemFont(10), Color.gray())
+        addLabelTo(stackMainRowBox, dateStr, Font.mediumSystemFont(10), new Color('888888'))
         stackMainRowBox.addSpacer(0)
     } else {
         stackMainRowBox.addSpacer(10)
@@ -237,7 +237,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     // === BL INCIDENCE
     const incidenceBLStack = stackMainRow.addStack();
     incidenceBLStack.layoutVertically()
-    incidenceBLStack.backgroundColor = new Color('f0f0f0')
+    incidenceBLStack.backgroundColor = new Color('dfdfdf')
     incidenceBLStack.cornerRadius = 4
     incidenceBLStack.setPadding(2,3,2,3)
 
@@ -255,7 +255,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false) {
     }
     // @TODO WORKAROUND FÜR DIE STACKBREITE ENTFERNEN
     areaName = areaName.toUpperCase().padEnd(50, ' ')
-    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14), Color.white())
+    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14))
     areanameLabel.lineLimit = 1
     stackMainRowBox.addSpacer(0)
 }
@@ -281,11 +281,11 @@ function addTrendsBarToIncidenceBlock(view, data) {
     trendsBarBox.layoutHorizontally()
     let chartdata = getChartData(data, 'incidence')
     // chartdata = [4,32,40,50,101,55,20] // DEMO!!!
-    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'areaCases', true), chartdata, true, Color.white())
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'areaCases', true), chartdata, true)
     trendsBarBox.addSpacer()    
     let chartdataBL = getChartData(data, 'incidenceBL')
     // chartdataBL = [4,28,35,51,75,105,60] // DEMO!!!
-    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'cases', true, true), chartdataBL, false, Color.white())
+    addChartBlockTo(trendsBarBox, getGetLastCasesAndTrend(data, 'cases', true, true), chartdataBL, false)
 }
 
 function addHeaderRowTo(view) {
@@ -297,7 +297,7 @@ function addHeaderRowTo(view) {
     return headerRow;
 }
 
-function addChartBlockTo(view, trendtitle, chartdata, alignLeft = true, color = false) {
+function addChartBlockTo(view, trendtitle, chartdata, alignLeft = true) {
     let block = view.addStack()
     block.layoutVertically()
     block.size = new Size(58, 24)
@@ -307,7 +307,6 @@ function addChartBlockTo(view, trendtitle, chartdata, alignLeft = true, color = 
     let chartText = textRow.addText(trendtitle)
     if (alignLeft) textRow.addSpacer()
     chartText.font = Font.mediumSystemFont(10)
-    if (color !== false) chartText.textColor = color
 
     let graphImg = generateGraph(chartdata, 58, 10, alignLeft).getImage()
     let chartImg = block.addImage(graphImg)
