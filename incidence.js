@@ -128,31 +128,31 @@ function getGetLastCasesAndTrend(data, field, calcDiff = false, fromBL = false) 
     let todayData = getDataForDate(data)
     let todayCases = todayData[field];
     if (fromBL) todayCases = getBLCases(todayData.incidencePerState, todayData.nameBL)
+    let yesterdayCases = false
+    let beforeYesterdayCases = false
 
     // YESTERDAY
     let yesterdayData = getDataForDate(data, 1)
-    if (calcDiff) {
-        if (yesterdayData) {
-            let yesterdayCases = yesterdayData[field];
-            if (fromBL) yesterdayCases = getBLCases(yesterdayData.incidencePerState, yesterdayData.nameBL)
-            if (yesterdayCases) casesTrendStr = formatNumber(todayCases - yesterdayCases);
+    if (yesterdayData) {
+        yesterdayCases = yesterdayData[field];
+        if (fromBL) yesterdayCases = getBLCases(yesterdayData.incidencePerState, yesterdayData.nameBL)
+    }
+    // BEFOREYESTERDAY
+            
+    let beforeYesterdayData = getDataForDate(data, 2)
+    if (beforeYesterdayData) {
+        beforeYesterdayCases = beforeYesterdayData[field];
+        if (fromBL) beforeYesterdayCases = getBLCases(beforeYesterdayData.incidencePerState, beforeYesterdayData.nameBL)
+    }
 
-            // BEFOREYESTERDAY
-            let beforeYesterdayData = getDataForDate(data, 2)
-            if (beforeYesterdayData) {
-                let beforeYesterdayCases = beforeYesterdayData[field];
-                if (fromBL) beforeYesterdayCases = getBLCases(beforeYesterdayData.incidencePerState, beforeYesterdayData.nameBL)
-                casesTrendStr += getTrendArrow(todayCases - yesterdayCases, yesterdayCases - beforeYesterdayCases)
-            }
-        } else {
-            casesTrendStr = 'n/v'
-        }
+    if (calcDiff) {
+        casesTrendStr = (yesterdayCases !== false) ? formatNumber(todayCases - yesterdayCases) : 'n/v'
     } else {
         casesTrendStr = formatNumber(todayCases);
-        if (yesterdayData) {
-            let yesterdayCases = yesterdayData[field];
-            casesTrendStr += getTrendArrow(todayCases, yesterdayCases)
-        }
+    }
+    
+    if (todayCases && yesterdayCases !== false && beforeYesterdayCases !== false) {
+        casesTrendStr += getTrendArrow(todayCases - yesterdayCases, yesterdayCases - beforeYesterdayCases)
     }
     return casesTrendStr
 }
@@ -193,7 +193,7 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
     addIncidence(incidenceBlockRows, data, useStaticCoordsIndex)
     addTrendsBarToIncidenceBlock(incidenceBlockRows, data)
     incidenceBlockRows.addSpacer(2)
-    
+
     incidenceBlockBox.addSpacer(padding[3])
     
     return incidenceBlockBox;
@@ -202,13 +202,12 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex) {
 function addIncidence(view, data, useStaticCoordsIndex = false) {
     const todayData = getDataForDate(data)
     const yesterdayData = getDataForDate(data, 1)
-    
+
     const incidenceBox = view.addStack()
     incidenceBox.setPadding(6,8,6,8)
     incidenceBox.cornerRadius = 12
     incidenceBox.backgroundColor = new Color('ffffff', 0.1)
     incidenceBox.layoutHorizontally()
-    
     
     const stackMainRowBox = incidenceBox.addStack()
     stackMainRowBox.layoutVertically()
@@ -378,8 +377,7 @@ async function getData(useStaticCoordsIndex = false) {
             incidencePerState: incidencePerState,
             averageIncidence: parseFloat(averageIncidence.toFixed(1)),
             cases: cases,
-            r: rValue,
-            blockPosition: useStaticCoordsIndex
+            r: rValue
         }
         return await saveLoadData(attr.RS, res)
     } catch (e) {
@@ -515,6 +513,3 @@ function parseRCSV(rDataStr) {
 function LOG(...data) {
     console.log(data.map(JSON.stringify).join(' | '))
 }
-
-
-
