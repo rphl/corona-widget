@@ -3,7 +3,7 @@
 // icon-color: red; icon-glyph: briefcase-medical;
 // Licence: Robert Koch-Institut (RKI), dl-de/by-2-0
 // BASE VERSION FORKED FROM AUTHOR: kevinkub https://gist.github.com/kevinkub/46caebfebc7e26be63403a7f0587f664
-// UPDATED VERSION BY AUTHOR: rphl https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5
+// UPDATED VERSION BY AUTHOR: rphl https://github.com/rphl/corona-widget/
 
 // ============= KONFIGURATION =============
 
