@@ -146,9 +146,9 @@ function getGetLastCasesAndTrend(data, field, calcDiff = false, fromBL = false) 
     }
 
     if (calcDiff) {
-        casesTrendStr = (yesterdayCases !== false) ? formatNumber(todayCases - yesterdayCases) : 'n/v'
+        casesTrendStr = (yesterdayCases !== false) ? '+' + formatNumber(todayCases - yesterdayCases) : 'n/v'
     } else {
-        casesTrendStr = formatNumber(todayCases);
+        casesTrendStr = '+' + formatNumber(todayCases);
     }
     
     if (todayCases && yesterdayCases !== false && beforeYesterdayCases !== false) {
