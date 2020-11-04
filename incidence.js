@@ -389,11 +389,11 @@ async function getRValue() {
     const rData = parseRCSV(rDataStr)
     let lastR = 0
     rData.forEach(item => {
-        if (typeof item['Schätzer_7_Tage_R_Wert'] !== 'undefined' && parseFloat(item['Schätzer_7_Tage_R_Wert']) > 0) {
+        if (typeof item['Punktsch„tzer des 7-Tage-R Wertes'] !== 'undefined' && parseFloat(item['Punktsch„tzer des 7-Tage-R Wertes']) > 0) {
             lastR = item;
         }
     })    
-    return (lastR) ? parseFloat(lastR['Schätzer_7_Tage_R_Wert'].replace(',','.')) : lastR
+    return (lastR) ? parseFloat(lastR['Punktsch„tzer des 7-Tage-R Wertes'].replace(',','.')) : lastR
 }
 
 function getIncidenceColor(incidence) {
