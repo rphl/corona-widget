@@ -459,6 +459,7 @@ async function getData(useStaticCoordsIndex = false) {
         if (preparedDataResponse.status === 200) saveData(attr.RS, preparedDataResponse.data)
         return preparedDataResponse
     } catch (e) {
+        console.warn(e)
         if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].cacheId) {
             console.warn('Begin loading from cache...' + staticCoordinates[useStaticCoordsIndex].cacheId)
             const loadedData = await loadData(staticCoordinates[useStaticCoordsIndex].cacheId)
