@@ -474,12 +474,19 @@ async function getData(useStaticCoordsIndex = false) {
 async function prepareData(dataId, oldAreaName, newData) {
     await migrateDataFiles(dataId, oldAreaName)
     const dataResponse = await loadData(dataId)
-    const migratedData = migrateData(dataResponse.data)
-    let data = (Object.keys(migratedData).length > 0) ? migratedData : dataResponse.data
+    let data = {}
+    if (dataResponse.status === 200) {
+        const migratedData = migrateData(dataResponse.data)
+        if (Object.keys(migratedData).length > 0) {
+            data = migratedData;
+        } else {
+            data = dataResponse.data
+        }
+    }
     data[newData.updated.substr(0, 10)] = newData
     data = limitData(data)
     data = populateDailyCases(data);
-    return new DataResponse(data, dataResponse.status)
+    return new DataResponse(data)
 }
 
 function populateDailyCases(data) {
