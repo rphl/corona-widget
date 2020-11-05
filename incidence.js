@@ -40,7 +40,7 @@
 const CONFIG_OPEN_URL = false // open RKI dashboard on tap
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
-const CONFIG_CSV_RVALUE_FIELD = 9 // numbered field (column), because of possible encoding changes in columns names on each update
+const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 
 // ============= ============= =============
 
@@ -122,7 +122,7 @@ class IncidenceWidget {
             headerRow.addSpacer(3)
     
             let todayData = getDataForDate(data, 0)
-            addLabelTo(headerRow, 'R ' + formatNumber(todayData.d.r), Font.mediumSystemFont(13))
+            addLabelTo(headerRow, (''+todayData.d.r.toFixed(2)).replace('.', ',') + 'ᴿ', Font.mediumSystemFont(14))
             headerRow.addSpacer()
         
             let chartdata = getChartData(data, 'd')
@@ -638,19 +638,20 @@ async function loadData(dataId) {
 }
 
 function parseRCSV(rDataStr) {
-    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0});
+    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0})
+    let headers = lines.splice(0, 1)[0].split(";");
     let valuesRegExp = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\";]+)/g;
-    let elements = [];
+    let elements = []
     for (let i = 0; i < lines.length; i++) {
-        let element = [];
+        let element = {};
         let j = 0;
         while (matches = valuesRegExp.exec(lines[i])) {
-            var value = matches[1] || matches[2];
-            value = value.replace(/\"\"/g, "\"");
-            element[j] = value;
+            var value = matches[1] || matches[2]
+            value = value.replace(/\"\"/g, "\"")
+            element[headers[j]] = value;
             j++;
         }
-        elements.push(element);
+        elements.push(element)
     }
     return elements
 }
