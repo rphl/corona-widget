@@ -122,13 +122,13 @@ class IncidenceWidget {
             headerRow.addSpacer(3)
     
             let todayData = getDataForDate(data, 0)
-            addLabelTo(headerRow, 'R ' + formatNumber(todayData.d.r), Font.mediumSystemFont(14))
+            addLabelTo(headerRow, 'R ' + formatNumber(todayData.d.r), Font.mediumSystemFont(13))
             headerRow.addSpacer()
         
             let chartdata = getChartData(data, 'd')
             let chartDataTitle = getGetLastCasesAndTrend(data, 'd')
             addChartBlockTo(headerRow, chartDataTitle, chartdata, false)
-            headerRow.addSpacer(3)
+            headerRow.addSpacer(0)
             list.addSpacer(3)
 
             const incidenceRow = list.addStack()
