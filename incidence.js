@@ -441,7 +441,7 @@ async function getData(useStaticCoordsIndex = false) {
                 areaCases: parseFloat(attr.cases.toFixed(1)),
             },
             state: {
-                incidence: statesData.incidence,
+                incidence: parseFloat(statesData.incidence.toFixed(1)),
                 name: BUNDESLAENDER_SHORT[attr.BL],
                 cases: statesData.cases,
                 dailyCases: -1
