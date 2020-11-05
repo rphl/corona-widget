@@ -24,9 +24,9 @@
 # Installation/Update
 
 ## Manual
-* Opem in Safari: https://raw.githubusercontent.com/rphl/corona-widget/master/incidence.js
+* Open in Safari: https://raw.githubusercontent.com/rphl/corona-widget/master/incidence.js
 * Copy Source
-* Open Scriptable, Paste copied script as new or replace an old
+* Open Scriptable, Paste copied Scripttext as new or replace an old
 
 ## Automatic
 * (SOON!) Via new Scriptable WidgetGallery: https://github.com/rphl/corona-widget/issues/25
