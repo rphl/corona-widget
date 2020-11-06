@@ -565,10 +565,10 @@ async function getRValue() {
     const rData = parseRCSV(rDataStr) 
     let lastR = 0
     rData.forEach(item => {
-        if (typeof item[CONFIG_CSV_RVALUE_FIELD] !== 'undefined' && parseFloat(item[CONFIG_CSV_RVALUE_FIELD]) > 0) {
+        if (typeof item[CONFIG_CSV_RVALUE_FIELD] !== 'undefined' && parseFloat(item[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) > 0) {
             lastR = item;
         }
-    })    
+    })
     return (lastR) ? parseFloat(lastR[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) : lastR
 }
 
