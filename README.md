@@ -36,6 +36,8 @@ Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung (
 
 # Configuration Incidence Widget
 
+Data will be cached in the Cachefolder: **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json
+
 ## Static Coordinates/MediumWidget
 
 Set Widgetparameter for each column, seperated by ";" Format: `POSITION,LAT,LONG(,NAME);POSITION,LAT,LONG(,NAME)`
@@ -54,8 +56,9 @@ Second column is only visible if you set Widgetparameter for it. Check examples.
 
  ## Offlinemode
 
- * Set the 4th Widgetparameter to the CacheId 
+ * Cachefolder: **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json
  * Cache Id = Numeric JSON FileNumber. See coronaWidget CacheFolder
+ * Set the 4th Widgetparameter to the CacheId 
 
 ### Examples:
  * Filename = coronaWidget01511.json
