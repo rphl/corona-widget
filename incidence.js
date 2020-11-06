@@ -187,7 +187,7 @@ function getChartData (data, property) {
     allKeys.forEach((key, index) => {
         if (typeof chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] !== 'undefined') {
             chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] = {
-                value: data[key][property]['dailyCases'],
+                value: (data[key][property]['dailyCases']) ? data[key][property]['dailyCases'] : 0,
                 incidence: data[key][property]['incidence']
             }
         }
@@ -386,7 +386,7 @@ function generateGraph(data, width, height, alignLeft = true) {
         let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
         let x = xOffset + (w + 1) * index
         let rect = new Rect(x, 0, w, h)
-        context.setFillColor(getIncidenceColor((item.value > 1) ? item.incidence : 0))
+        context.setFillColor(getIncidenceColor((item.value >= 1) ? item.incidence : 0))
         context.fillRect(rect)
     })
     return context
