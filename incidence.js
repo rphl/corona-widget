@@ -242,8 +242,9 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     stackMainRow.centerAlignContent()
 
     // === INCIDENCE
-    const incidence = (todayData.area.incidence >= 100) ? Math.round(todayData.area.incidence) : todayData.area.incidence;
-    addLabelTo(stackMainRow, formatNumber(incidence), Font.boldSystemFont(27), getIncidenceColor(incidence))
+    let incidence = formatNumber(todayData.area.incidence.toFixed(1), 1)
+    if (todayData.area.incidence >= 100) incidence = formatNumber(Math.round(todayData.area.incidence))
+    addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(todayData.area.incidence))
     
     if (yesterdayData) {
         const incidenceTrend = getTrendArrow(todayData.area.incidence, yesterdayData.area.incidence);
@@ -259,8 +260,8 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     incidenceBLStack.cornerRadius = 4
     incidenceBLStack.setPadding(2,3,2,3)
 
-    let incidenceBL = (todayData.state.incidence >= 100) ? Math.round(todayData.state.incidence) : todayData.state.incidence;
-    incidenceBL = formatNumber(incidenceBL)
+    let incidenceBL = formatNumber(todayData.state.incidence.toFixed(1), 1);
+    if (todayData.state.incidence >= 100) incidenceBL = formatNumber(Math.round(todayData.state.incidence))
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
     }
@@ -284,8 +285,8 @@ function addLabelTo(view, text, font = false, textColor = false) {
     return label
 }
 
-function formatNumber(number) {
-    return new Number(number).toLocaleString('de-DE')
+function formatNumber(number, minimumFractionDigits = 0) {
+    return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
 }
 
 function getTrendUpArrow(now, prev) {
