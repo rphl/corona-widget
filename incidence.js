@@ -10,32 +10,9 @@
  * BASE VERSION FORKED FROM AUTHOR: kevinkub https://gist.github.com/kevinkub/46caebfebc7e26be63403a7f0587f664/c5db6e2c1c45a41bdd4a85990c0d0b883915b3c3
  * THIS VERSION (AUTHOR: https://github.com/rphl) https://github.com/rphl/corona-widget/
  * 
- * 
- * Widgetparamter:
- * 
- * Fix Coordinates/MediumWidget:
- * Set Widgetparameter for each column, seperated by ";" Format: POSITION,LAT,LONG(,NAME);POSITION,LAT,LONG(,NAME)
- *
- * Examples:
- *
- * First fix column (No second column): 0,51.1244,6.7353
- * Second fix column (Second column is visble, MediumWidget): 1,51.1244,6.7353
- * Both Fix columns (both are visble, MediumWidget): 0,51.1244,6.7353;1,51.1244,6.7353
- * Only Second Fix (both are visble, MediumWidget): 1,51.1244,6.7353
- * Custom Name: 0,51.1244,6.7353,Home
- * Custom Name Second column: 1,51.1244,6.7353,Work
- * 
- * 
- * Offlinemode:
- * Set the 4th Widgetparameter to the CacheId 
- * Cache Id = Numeric JSON FileNumber. See coronaWidget CacheFolder
- * 
- * Examples:
- * Filename = coronaWidget01511.json
- * Config set to: 1,51.1244,6.7353,Work,01511
  */
 
-// ============= KONFIGURATION =============
+// ============= EXTRA KONFIGURATION ============= ============= ===========
 
 const CONFIG_OPEN_URL = false // open RKI dashboard on tap
 const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
@@ -43,7 +20,14 @@ const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
 const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 
-// ============= ============= =============
+// ============= ============= ============= ============= =================
+// HALT, STOP !!!
+// NACHFOLGENDE ZEILEN NUR AUF EIGENE GEFAHR ÄNDERN !!!
+// ============= ============= ============= ============= =================
+// ZUR KONFIGURATION SIEHE README: 
+// https://github.com/rphl/corona-widget/blob/master/README.md
+// ============= ============= ============= ============= =================
+
 
 const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS,IBZ';
 const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
@@ -88,12 +72,6 @@ if (args.widgetParameter) {
     if (typeof staticCoordinates[1] !== 'undefined' && Object.keys(staticCoordinates[1]).length >= 3) {
         MEDIUMWIDGET = true
     }
-} else {
-    //MEDIUMWIDGET = true
-    // staticCoordinates[0] = { latitude:51.19807, longitude: 6.6850, name: false/*, name:'Home'*/ } // NEUSS
-    //staticCoordinates[1] = { latitude:51.233334, longitude: 6.783333, name:'Work'/*, cacheId: '05111'*/ } // DÜSSELDORF
-   //latitude:48.13743, longitude: 11.57549, name:false
-    //latitude:48.137154, longitude: 11.57612, name:false
 }
 
 var fm = getFilemanager()
