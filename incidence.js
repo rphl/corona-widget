@@ -38,13 +38,14 @@
 // ============= KONFIGURATION =============
 
 const CONFIG_OPEN_URL = false // open RKI dashboard on tap
+const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
 const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 
 // ============= ============= =============
 
-const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS';
+const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS,IBZ';
 const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
 const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
 const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
@@ -268,18 +269,53 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
     addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '444444')
 
+    const areaNameStack = stackMainRowBox.addStack();
+    areaNameStack.layoutHorizontally()
+    areaNameStack.setPadding(0,0,0,0)
+    areaNameStack.centerAlignContent()
+
+    let areaIcon = getAreaIcon(todayData.area.areaIBZ)
+    if (areaIcon && CONFIG_SHOW_AREA_ICON) {
+        let areaNameIconBox = areaNameStack.addStack()
+        areaNameIconBox.borderColor = new Color('999999', 0.3)
+        areaNameIconBox.borderWidth = 2
+        areaNameIconBox.cornerRadius = 2
+        areaNameIconBox.setPadding(1,3,1,3)
+        let areaIconLabel = areaNameIconBox.addText(areaIcon)
+        areaIconLabel.font = Font.mediumSystemFont(9)
+        areaNameStack.addSpacer(3)
+    }
+
     let areaName = todayData.area.name
     if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
         areaName = staticCoordinates[useStaticCoordsIndex].name
     }
     areaName = areaName.toUpperCase().padEnd(50, ' ')
-    const areanameLabel = addLabelTo(stackMainRowBox, areaName, Font.mediumSystemFont(14))
+    const areanameLabel = addLabelTo(areaNameStack, areaName, Font.mediumSystemFont(14))
     areanameLabel.lineLimit = 1
+    areaNameStack.addSpacer()
     stackMainRowBox.addSpacer(0)
 }
 
-function addLabelTo(view, text, font = false, textColor = false) {
+function getAreaIcon(areaIBZ) {
+    switch (areaIBZ) {
+        case 40: // Kreisfreie Stadt
+            return 'KS'
+        case 41: // Stadtkreis
+            return 'SK'
+        case 42: // Kreis
+        case 46: // Sonderverband offiziel Kreis
+            return 'K'
+        case 43: // Landkreis
+        case 45: // Sonderverband offiziel Landkreis
+            return 'LK'
+    }
+    return 'BZ' // Bezirk
+}
+
+function addLabelTo(view, text, font = false, textColor = false, minScale = 1.0) {
     const label = view.addText('' + text)
+    label.minimumScaleFactor = minScale
     if (font) label.font = font
     if (textColor) label.textColor = (typeof textColor === 'string') ? new Color(textColor) : textColor;
     return label
@@ -290,7 +326,7 @@ function formatNumber(number, minimumFractionDigits = 0) {
 }
 
 function getTrendUpArrow(now, prev) {
-    return (Math.abs(now) < Math.abs(prev)) ? '↗' : (Math.abs(now) > Math.abs(prev)) ? '↑' : '→'
+    return (now < prev) ? '↗' : (now > prev) ? '↑' : '→'
 }
 
 function getTrendArrow(value1, value2) {
@@ -305,44 +341,14 @@ function addTrendsBarToIncidenceBlock(view, data) {
     // AREA TREND
     let chartdata = getChartData(data, 'area')
     let chartDataTitle = getGetLastCasesAndTrend(data, 'area')
-    /*DEMO!!!! chartdata = [
-        {incidence: 0, value: 0},
-        {incidence: 10, value: 10},
-        {incidence: 20, value: 20},
-        {incidence: 30, value: 30},
-        {incidence: 40, value: 40},
-        {incidence: 50, value: 50},
-        {incidence: 70, value: 70},
-        {incidence: 100, value: 100},
-        {incidence: 60, value: 60},
-        {incidence: 70, value: 70},
-        {incidence: 39, value: 39},
-        {incidence: 20, value: 25},
-        {incidence: 10, value: 20},
-        {incidence: 30, value: 30},
-    ]*/
+    /*DEMO!!!! chartdata = [{incidence: 0, value: 0},{incidence: 10, value: 10}{incidence: 20, value: 20},{incidence: 30, value: 30},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 60, value: 60},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 20, value: 25},{incidence: 10, value: 20},{incidence: 30, value: 30},]*/
     addChartBlockTo(trendsBarBox, chartDataTitle, chartdata, true)
     trendsBarBox.addSpacer()
 
     // STATE TREND
     let chartdataBL = getChartData(data, 'state')
     let chartDataBLTitle = getGetLastCasesAndTrend(data, 'state')
-    /* DEMO!!!! chartdataBL = [
-        {incidence: 0, value: 0},
-        {incidence: 20, value: 20},
-        {incidence: 40, value: 40},
-        {incidence: 50, value: 50},
-        {incidence: 70, value: 70},
-        {incidence: 100, value: 100},
-        {incidence: 110, value: 110},
-        {incidence: 77, value: 77},
-        {incidence: 70, value: 70},
-        {incidence: 39, value: 39},
-        {incidence: 30, value: 40},
-        {incidence: 30, value: 30},
-        {incidence: 40, value: 60},
-        {incidence: 30, value: 20}
-    ]*/
+    /* DEMO!!!! chartdataBL = [{incidence: 0, value: 0},{incidence: 20, value: 20},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 110, value: 110},{incidence: 77, value: 77},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 30, value: 40},{incidence: 30, value: 30},{incidence: 40, value: 60},{incidence: 30, value: 20}]*/
     addChartBlockTo(trendsBarBox, chartDataBLTitle, chartdataBL, false)
 }
 
@@ -440,6 +446,7 @@ async function getData(useStaticCoordsIndex = false) {
                 name: attr.GEN,
                 dailyCases: -1,
                 areaCases: parseFloat(attr.cases.toFixed(1)),
+                areaIBZ: attr.IBZ
             },
             state: {
                 incidence: parseFloat(statesData.incidence.toFixed(1)),
