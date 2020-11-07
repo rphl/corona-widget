@@ -508,7 +508,7 @@ function populateDailyCases(data) {
 
 function limitData(data) {
     const dataKeys = Object.keys(data);
-    const lastKeys = dataKeys.slice(Math.max(Object.keys(data).length - CONFIG_MAX_CACHED_DAYS + 1, 0))
+    const lastKeys = dataKeys.slice(Math.max(dataKeys.length - CONFIG_MAX_CACHED_DAYS, 0))
     let dataLimited = {}
     lastKeys.forEach(key => {
         dataLimited[key] = data[key]
