@@ -26,12 +26,12 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 # Installation/Update
 
-## Manuell
+**Manuell**
 * Safari öffnen: https://raw.githubusercontent.com/rphl/corona-widget/master/incidence.js
 * Skripttext kopieren
 * Scriptable öffnen, kopierten Skripttext als neues Scriptablescript einfügen oder altes erstzen.
 
-## Automatisch
+**Automatisch**
 * Via Kurzbefehle (Shortcuts) App
 * ...andere Option: https://github.com/rphl/corona-widget/issues/24
 * ...andere Option: https://github.com/rphl/corona-widget/issues/6#issuecomment-721099314
@@ -41,9 +41,8 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 * Daten werden unter **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json zwischengespeichert.
 * Die allgemeine Konfiguration erfolgt mittels **WidgetParameter**:
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/widgetparameter.png)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/widgetparameter.jpg)
 
----
 
 ## Statische Standort Koordinaten
 
@@ -60,7 +59,6 @@ Das Widget erkennt automatisch den Standort. Es ist jedoch möglich den Standort
 * Beide Standorte sind statisch (MediumWidget): `0,51.1244,6.7353;1,51.1244,6.7353`
 * Nur zweiter Standort ist statisch (MediumWidget): `1,51.1244,6.7353`
  
----
 
 ## Eigene Standortnamen
 
@@ -73,7 +71,6 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
  * Eigener Name z.B "Home" für den ersten Standort: `0,51.1244,6.7353,Home`
  * Eigener Name z.B "Work" für den zweiten Standort: `1,51.1244,6.7353,Work`
 
----
 
 ## Offlinemodus
 
