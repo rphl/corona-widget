@@ -41,7 +41,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 * Daten werden unter **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json zwischengespeichert.
 * Die allgemeine Konfiguration erfolgt mittels **WidgetParameter**:
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.png)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/widgetparameter.png)
 
 ---
 
