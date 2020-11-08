@@ -65,7 +65,7 @@ const BUNDESLAENDER_SHORT = {
     'Thüringen': 'TH'
 };
 
-let MEDIUMWIDGET = (config.widgetFamily === 'medium') ? true : false
+let MEDIUMWIDGET = config.widgetFamily === 'medium'
 let staticCoordinates = []
 if (args.widgetParameter) {
     staticCoordinates = parseInput(args.widgetParameter)
