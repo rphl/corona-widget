@@ -300,7 +300,7 @@ function addLabelTo(view, text, font = false, textColor = false, minScale = 1.0)
 }
 
 function formatNumber(number, minimumFractionDigits = 0) {
-    return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
+    return Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
 }
 
 function getTrendUpArrow(now, prev) {
