@@ -366,7 +366,7 @@ function generateGraph(data, width, height, alignLeft = true) {
     let xOffset = (!alignLeft) ? (width - (data.length * (w + 1))) : 0
     data.forEach((item, index) => {
         let value = parseFloat(item.value)
-        if (value === -1 && index == 0) value = 10;
+        if (value === -1 && index === 0) value = 10;
         let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
         let x = xOffset + (w + 1) * index
         let rect = new Rect(x, 0, w, h)
@@ -632,7 +632,7 @@ async function loadData(dataId) {
 }
 
 function parseRCSV(rDataStr) {
-    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0})
+    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length !== 0})
     let headers = lines.splice(0, 1)[0].split(";");
     let valuesRegExp = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\";]+)/g;
     let elements = []
