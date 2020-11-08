@@ -74,7 +74,7 @@ if (args.widgetParameter) {
     }
 }
 
-var fm = getFilemanager()
+let fm = getFilemanager()
 let fmConfigDirectory = fm.joinPath(fm.documentsDirectory(), '/coronaWidget')
 let data = {}
 
@@ -662,6 +662,7 @@ class DataResponse {
 }
 
 function getFilemanager() {
+    let fm
     try {
         fm = FileManager.iCloud()
     } catch (e) {
