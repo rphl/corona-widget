@@ -40,12 +40,12 @@ const LIMIT_DARKRED = 100
 const LIMIT_RED = 50
 const LIMIT_ORANGE = 35
 const LIMIT_YELLOW = 25
-const LIMIT_DARKRED_COLOR = new Color('a1232b')
-const LIMIT_RED_COLOR = new Color('f6000f')
-const LIMIT_ORANGE_COLOR = new Color('ff7927')
-const LIMIT_YELLOW_COLOR = new Color('F5D800')
-const LIMIT_GREEN_COLOR = new Color('1CC747')
-const LIMIT_GRAY_COLOR = new Color('d0d0d0')
+const LIMIT_DARKRED_COLOR = new Color('#a1232b')
+const LIMIT_RED_COLOR = new Color('#f6000f')
+const LIMIT_ORANGE_COLOR = new Color('#ff7927')
+const LIMIT_YELLOW_COLOR = new Color('#F5D800')
+const LIMIT_GREEN_COLOR = new Color('#1CC747')
+const LIMIT_GRAY_COLOR = new Color('#d0d0d0')
 const BUNDESLAENDER_SHORT = {
     'Baden-Württemberg': 'BW',
     'Bayern': 'BY',
@@ -181,7 +181,7 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex, status =
     incidenceBlockBox.addSpacer(padding[1])
     
     const incidenceBlockRows = incidenceBlockBox.addStack()
-    incidenceBlockRows.backgroundColor = new Color('cccccc', 0.1)
+    incidenceBlockRows.backgroundColor = new Color('#cccccc', 0.1)
     incidenceBlockRows.setPadding(0,0,0,0)
     incidenceBlockRows.cornerRadius = 14
     incidenceBlockRows.layoutVertically()
@@ -201,7 +201,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     const incidenceBox = view.addStack()
     incidenceBox.setPadding(6,8,6,8)
     incidenceBox.cornerRadius = 12
-    incidenceBox.backgroundColor = new Color('999999', 0.1)
+    incidenceBox.backgroundColor = new Color('#999999', 0.1)
     incidenceBox.layoutHorizontally()
     
     const stackMainRowBox = incidenceBox.addStack()
@@ -209,10 +209,10 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     stackMainRowBox.addSpacer(0)
 
     if (useStaticCoordsIndex === 0 && status === 200) {
-        addLabelTo(stackMainRowBox, todayData.updated.substr(0, 10), Font.mediumSystemFont(10), new Color('888888'))
+        addLabelTo(stackMainRowBox, todayData.updated.substr(0, 10), Font.mediumSystemFont(10), new Color('#888888'))
         stackMainRowBox.addSpacer(0)
     } else if (useStaticCoordsIndex === 0 && status === 418) {
-        addLabelTo(stackMainRowBox, '⚡️ Offlinemodus!', Font.mediumSystemFont(10), new Color('dbc43d'))
+        addLabelTo(stackMainRowBox, '⚡️ Offlinemodus!', Font.mediumSystemFont(10), new Color('#dbc43d'))
         stackMainRowBox.addSpacer(0)
     } else {
         stackMainRowBox.addSpacer(10)
@@ -227,7 +227,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     
     if (yesterdayData) {
         const incidenceTrend = getTrendArrow(todayData.area.incidence, yesterdayData.area.incidence);
-        const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
+        const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('#999999')
         addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
     }
     stackMainRow.addSpacer(4)
@@ -235,7 +235,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     // === BL INCIDENCE
     const incidenceBLStack = stackMainRow.addStack();
     incidenceBLStack.layoutVertically()
-    incidenceBLStack.backgroundColor = new Color('dfdfdf')
+    incidenceBLStack.backgroundColor = new Color('#dfdfdf')
     incidenceBLStack.cornerRadius = 4
     incidenceBLStack.setPadding(2,3,2,3)
 
@@ -244,8 +244,8 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
     }
-    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
-    addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '444444')
+    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '#444444')
+    addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '#444444')
 
     const areaNameStack = stackMainRowBox.addStack();
     areaNameStack.layoutHorizontally()
@@ -255,7 +255,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     let areaIcon = getAreaIcon(todayData.area.areaIBZ)
     if (areaIcon && CONFIG_SHOW_AREA_ICON) {
         let areaNameIconBox = areaNameStack.addStack()
-        areaNameIconBox.borderColor = new Color('999999', 0.3)
+        areaNameIconBox.borderColor = new Color('#999999', 0.3)
         areaNameIconBox.borderWidth = 2
         areaNameIconBox.cornerRadius = 2
         areaNameIconBox.setPadding(1,3,1,3)
