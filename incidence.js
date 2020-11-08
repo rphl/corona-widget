@@ -14,11 +14,15 @@
 
 // ============= EXTRA KONFIGURATION ============= ============= ===========
 
-const CONFIG_OPEN_URL = false // open RKI dashboard on tap
-const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
-const CONFIG_GRAPH_SHOW_DAYS = 14
-const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
-const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
+const CFG = {
+    openUrlOnTap: false, // open RKI dashboard on tap
+    urlToOpen: "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
+    showAreaIcon: true, // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
+    graphShowDays: 14,
+    maxCachedDays: 14, // WARNING!!! Smaller values will delete saved days > CFG.maxCachedDays. Backup JSON first ;-)
+    csvRvalueField: 'Schätzer_7_Tage_R_Wert', // numbered field (column), because of possible encoding changes in columns names on each update
+    refreshInterval: 3600 // refresh after 1 hour (in seconds)
+}
 
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
@@ -28,62 +32,56 @@ const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (col
 // https://github.com/rphl/corona-widget/blob/master/README.md
 // ============= ============= ============= ============= =================
 
+const ENV = {
+    incidenceLimits: {
+        darkred: 100,
+        red: 50,
+        orange: 35,
+        yellow: 25
+    },
+    incidenceColors: {
+        darkred: new Color('#a1232b'),
+        red: new Color('#f6000f'),
+        orange: new Color('##ff7927'),
+        yellow: new Color('#F5D800'),
+        green: new Color('#1CC747'),
+        gray: new Color('#d0d0d0')
+    },
+    statesAbbr: {
+        'Baden-Württemberg': 'BW',
+        'Bayern': 'BY',
+        'Berlin': 'BE',
+        'Brandenburg': 'BB',
+        'Bremen': 'HB', 
+        'Hamburg': 'HH',
+        'Hessen': 'HE',
+        'Mecklenburg-Vorpommern': 'MV',
+        'Niedersachsen': 'NI',
+        'Nordrhein-Westfalen': 'NRW',
+        'Rheinland-Pfalz': 'RP',
+        'Saarland': 'SL',
+        'Sachsen': 'SN',
+        'Sachsen-Anhalt': 'ST',
+        'Schleswig-Holstein': 'SH',
+        'Thüringen': 'TH'
+    },
+    isMediumWidget: config.widgetFamily === 'medium',
+}
 
-const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS,IBZ';
-const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
-const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
-const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
-const apiUrlNewCases = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
-const apiRUrl = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
-
-const LIMIT_DARKRED = 100
-const LIMIT_RED = 50
-const LIMIT_ORANGE = 35
-const LIMIT_YELLOW = 25
-const LIMIT_DARKRED_COLOR = new Color('a1232b')
-const LIMIT_RED_COLOR = new Color('f6000f')
-const LIMIT_ORANGE_COLOR = new Color('ff7927')
-const LIMIT_YELLOW_COLOR = new Color('F5D800')
-const LIMIT_GREEN_COLOR = new Color('1CC747')
-const LIMIT_GRAY_COLOR = new Color('d0d0d0')
-const BUNDESLAENDER_SHORT = {
-    'Baden-Württemberg': 'BW',
-    'Bayern': 'BY',
-    'Berlin': 'BE',
-    'Brandenburg': 'BB',
-    'Bremen': 'HB', 
-    'Hamburg': 'HH',
-    'Hessen': 'HE',
-    'Mecklenburg-Vorpommern': 'MV',
-    'Niedersachsen': 'NI',
-    'Nordrhein-Westfalen': 'NRW',
-    'Rheinland-Pfalz': 'RP',
-    'Saarland': 'SL',
-    'Sachsen': 'SN',
-    'Sachsen-Anhalt': 'ST',
-    'Schleswig-Holstein': 'SH',
-    'Thüringen': 'TH'
-};
-
-let MEDIUMWIDGET = (config.widgetFamily === 'medium') ? true : false
 let staticCoordinates = []
 if (args.widgetParameter) {
     staticCoordinates = parseInput(args.widgetParameter)
     if (typeof staticCoordinates[1] !== 'undefined' && Object.keys(staticCoordinates[1]).length >= 3) {
-        MEDIUMWIDGET = true
+        CFG.isMediumWidget = true
     }
 }
-
-var fm = getFilemanager()
-let fmConfigDirectory = fm.joinPath(fm.documentsDirectory(), '/coronaWidget')
-let data = {}
 
 class IncidenceWidget {
     async init() {
         const widget = await this.createWidget()
         widget.setPadding(0,0,0,0)
         if (!config.runsInWidget) {
-            if (MEDIUMWIDGET) {
+            if (CFG.isMediumWidget) {
                 await widget.presentMedium()
             } else {
                 await widget.presentSmall()
@@ -105,7 +103,7 @@ class IncidenceWidget {
             headerRow.addSpacer()
         
             let chartdata = getChartData(data, 'd')
-            let chartDataTitle = getGetLastCasesAndTrend(data, 'd')
+            let chartDataTitle = getLastCasesAndTrend(data, 'd')
             addChartBlockTo(headerRow, chartDataTitle, chartdata, false)
             headerRow.addSpacer(0)
             list.addSpacer(3)
@@ -114,17 +112,17 @@ class IncidenceWidget {
             incidenceRow.layoutHorizontally()
             incidenceRow.centerAlignContent()
         
-            let padding = (MEDIUMWIDGET) ? 5 : 10
+            let padding = (CFG.isMediumWidget) ? 5 : 10
             addIncidenceBlockTo(incidenceRow, data, [2,10,10,padding], 0, dataResponse.status)
-            if (MEDIUMWIDGET) {
+            if (CFG.isMediumWidget) {
                 const dataResponse1 = await getData(1)
                 if (dataResponse1.status === 200 || dataResponse1.status === 418) {
                     let data1 = dataResponse1.data
                     addIncidenceBlockTo(incidenceRow, data1, [2,padding,10,10], 1, dataResponse1.status)
                 }
             }
-            if (CONFIG_OPEN_URL) list.url = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4"
-            list.refreshAfterDate = new Date(Date.now() + 60 * 60 * 1000)
+            if (CFG.openUrlOnTap) list.url = CFG.urlToOpen
+            list.refreshAfterDate = new Date(Date.now() + (CFG.refreshInterval * 1000))
         } else {
             headerRow.addSpacer()
             list.addSpacer()
@@ -136,7 +134,7 @@ class IncidenceWidget {
     }
 }
 
-function getGetLastCasesAndTrend(data, property) {
+function getLastCasesAndTrend(data, property) {
     // TODAY
     let casesTrendStr = '';
     let todayData = getDataForDate(data)
@@ -162,10 +160,10 @@ function getGetLastCasesAndTrend(data, property) {
 
 function getChartData (data, property) {
     const allKeys = Object.keys(data).reverse()
-    const chartdata = new Array(CONFIG_GRAPH_SHOW_DAYS).fill({ value: 0, incidence: 0 });
+    const chartdata = new Array(CFG.graphShowDays).fill({ value: 0, incidence: 0 });
     allKeys.forEach((key, index) => {
-        if (typeof chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] !== 'undefined') {
-            chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] = {
+        if (typeof chartdata[CFG.graphShowDays - 1 - index] !== 'undefined') {
+            chartdata[CFG.graphShowDays - 1 - index] = {
                 value: (data[key][property]['dailyCases']) ? data[key][property]['dailyCases'] : 0,
                 incidence: data[key][property]['incidence']
             }
@@ -181,7 +179,7 @@ function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex, status =
     incidenceBlockBox.addSpacer(padding[1])
     
     const incidenceBlockRows = incidenceBlockBox.addStack()
-    incidenceBlockRows.backgroundColor = new Color('cccccc', 0.1)
+    incidenceBlockRows.backgroundColor = new Color('#cccccc', 0.1)
     incidenceBlockRows.setPadding(0,0,0,0)
     incidenceBlockRows.cornerRadius = 14
     incidenceBlockRows.layoutVertically()
@@ -201,7 +199,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     const incidenceBox = view.addStack()
     incidenceBox.setPadding(6,8,6,8)
     incidenceBox.cornerRadius = 12
-    incidenceBox.backgroundColor = new Color('999999', 0.1)
+    incidenceBox.backgroundColor = new Color('#999999', 0.1)
     incidenceBox.layoutHorizontally()
     
     const stackMainRowBox = incidenceBox.addStack()
@@ -209,10 +207,10 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     stackMainRowBox.addSpacer(0)
 
     if (useStaticCoordsIndex === 0 && status === 200) {
-        addLabelTo(stackMainRowBox, todayData.updated.substr(0, 10), Font.mediumSystemFont(10), new Color('888888'))
+        addLabelTo(stackMainRowBox, todayData.updated.substr(0, 10), Font.mediumSystemFont(10), new Color('#888888'))
         stackMainRowBox.addSpacer(0)
     } else if (useStaticCoordsIndex === 0 && status === 418) {
-        addLabelTo(stackMainRowBox, '⚡️ Offlinemodus!', Font.mediumSystemFont(10), new Color('dbc43d'))
+        addLabelTo(stackMainRowBox, '⚡️ Offlinemodus!', Font.mediumSystemFont(10), new Color('#dbc43d'))
         stackMainRowBox.addSpacer(0)
     } else {
         stackMainRowBox.addSpacer(10)
@@ -227,7 +225,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     
     if (yesterdayData) {
         const incidenceTrend = getTrendArrow(todayData.area.incidence, yesterdayData.area.incidence);
-        const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
+        const incidenceLabelColor = (incidenceTrend === '↑') ? ENV.incidenceColors.red : (incidenceTrend === '↓') ? ENV.incidenceColors.red : new Color('#999999')
         addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
     }
     stackMainRow.addSpacer(4)
@@ -235,7 +233,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     // === BL INCIDENCE
     const incidenceBLStack = stackMainRow.addStack();
     incidenceBLStack.layoutVertically()
-    incidenceBLStack.backgroundColor = new Color('dfdfdf')
+    incidenceBLStack.backgroundColor = new Color('#dfdfdf')
     incidenceBLStack.cornerRadius = 4
     incidenceBLStack.setPadding(2,3,2,3)
 
@@ -253,9 +251,9 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     areaNameStack.centerAlignContent()
 
     let areaIcon = getAreaIcon(todayData.area.areaIBZ)
-    if (areaIcon && CONFIG_SHOW_AREA_ICON) {
+    if (areaIcon && CFG.showAreaIcon) {
         let areaNameIconBox = areaNameStack.addStack()
-        areaNameIconBox.borderColor = new Color('999999', 0.3)
+        areaNameIconBox.borderColor = new Color('#999999', 0.3)
         areaNameIconBox.borderWidth = 2
         areaNameIconBox.cornerRadius = 2
         areaNameIconBox.setPadding(1,3,1,3)
@@ -318,14 +316,14 @@ function addTrendsBarToIncidenceBlock(view, data) {
 
     // AREA TREND
     let chartdata = getChartData(data, 'area')
-    let chartDataTitle = getGetLastCasesAndTrend(data, 'area')
+    let chartDataTitle = getLastCasesAndTrend(data, 'area')
     /*DEMO!!!! chartdata = [{incidence: 0, value: 0},{incidence: 10, value: 10}{incidence: 20, value: 20},{incidence: 30, value: 30},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 60, value: 60},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 20, value: 25},{incidence: 10, value: 20},{incidence: 30, value: 30},]*/
     addChartBlockTo(trendsBarBox, chartDataTitle, chartdata, true)
     trendsBarBox.addSpacer()
 
     // STATE TREND
     let chartdataBL = getChartData(data, 'state')
-    let chartDataBLTitle = getGetLastCasesAndTrend(data, 'state')
+    let chartDataBLTitle = getLastCasesAndTrend(data, 'state')
     /* DEMO!!!! chartdataBL = [{incidence: 0, value: 0},{incidence: 20, value: 20},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 110, value: 110},{incidence: 77, value: 77},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 30, value: 40},{incidence: 30, value: 30},{incidence: 40, value: 60},{incidence: 30, value: 20}]*/
     addChartBlockTo(trendsBarBox, chartDataBLTitle, chartdataBL, false)
 }
@@ -366,7 +364,7 @@ function generateGraph(data, width, height, alignLeft = true) {
     let xOffset = (!alignLeft) ? (width - (data.length * (w + 1))) : 0
     data.forEach((item, index) => {
         let value = parseFloat(item.value)
-        if (value === -1 && index == 0) value = 10;
+        if (value === -1 && index === 0) value = 10;
         let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
         let x = xOffset + (w + 1) * index
         let rect = new Rect(x, 0, w, h)
@@ -390,62 +388,45 @@ async function getLocation(staticCoordinateIndex = false) {
 }
 
 async function getData(useStaticCoordsIndex = false) {
-    let rValue = 0
-    try {
-        rValue = await getRValue()
-    } catch(e) { console.warn(e) }
-  
-    let cases = -1
-    try {
-        let dataCases = await new Request(apiUrlNewCases).loadJSON()
-        cases = dataCases.features[0].attributes.value
-    } catch(e) { console.warn(e) }
+    const location = await getLocation(useStaticCoordsIndex)
 
-    try {
-        // AREA DATA
-        const location = await getLocation(useStaticCoordsIndex)
-        let data = await new Request(apiUrl(location)).loadJSON()
-        const attr = data.features[0].attributes
-
-        // STATES DATA
-        let dataStates = await new Request(apiUrlStates).loadJSON()
-        const allStatesData = dataStates.features.map((f) => { return {
-            BL: BUNDESLAENDER_SHORT[f.attributes.LAN_ew_GEN],
-            incidence: f.attributes.cases7_bl_per_100k,
-            cases: f.attributes.Fallzahl
-        }})
-        const statesData = getStateData(allStatesData, BUNDESLAENDER_SHORT[attr.BL])
-        const averageIncidence = allStatesData.reduce((a, b) => a + b.incidence, 0) / allStatesData.length
+    if (location) {
+        const rValue = await rkiService.getRvalue()
+        const cases = await rkiService.getCases()
+        const dataArea = await rkiService.getLocationData(location)
+        const dataState = await rkiService.getStateData(dataArea.BL)
 
         // FORMATTED DATA
         const res = {
             area: {
-                incidence: parseFloat(attr.cases7_per_100k.toFixed(1)),
-                name: attr.GEN,
+                incidence: parseFloat(dataArea.cases7_per_100k.toFixed(1)),
+                name: dataArea.GEN,
                 dailyCases: -1,
-                areaCases: parseFloat(attr.cases.toFixed(1)),
-                areaIBZ: attr.IBZ
+                areaCases: parseFloat(dataArea.cases.toFixed(1)),
+                areaIBZ: dataArea.IBZ
             },
             state: {
-                incidence: parseFloat(statesData.incidence.toFixed(1)),
-                name: BUNDESLAENDER_SHORT[attr.BL],
-                cases: statesData.cases,
+                incidence: parseFloat(dataState.state.incidence.toFixed(1)),
+                name: ENV.statesAbbr[dataState.state.name],
+                cases: dataState.state.cases,
                 dailyCases: -1
             },
             d: {
-                incidence: parseFloat(averageIncidence.toFixed(1)),
+                incidence: parseFloat(dataState.averageIncidence.toFixed(1)),
                 dailyCases: cases,
                 r: rValue
             },
-            updated: attr.last_update,
-            updatedTS: getTimestamp(attr.last_update),
-            rs: attr.RS,
+            updated: dataArea.last_update,
+            updatedTS: getTimestamp(dataArea.last_update),
+            rs: dataArea.RS,
         }
-        const preparedDataResponse = await prepareData(attr.RS, attr.GEN, res)
-        if (preparedDataResponse.status === 200) saveData(attr.RS, preparedDataResponse.data)
+
+        await fm.migrateDataFiles(dataArea.RS, dataArea.GEN)
+        const preparedDataResponse = await new Data().prepareData(dataArea.RS, res)
+        if (preparedDataResponse.status === 200) fm.saveData(dataArea.RS, preparedDataResponse.data)
         return preparedDataResponse
-    } catch (e) {
-        console.warn(e)
+
+    } else {
         if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].cacheId) {
             console.warn('Begin loading from cache...' + staticCoordinates[useStaticCoordsIndex].cacheId)
             const loadedData = await loadData(staticCoordinates[useStaticCoordsIndex].cacheId)
@@ -457,119 +438,24 @@ async function getData(useStaticCoordsIndex = false) {
     return new DataResponse({}, 404)
 }
 
-async function prepareData(dataId, oldAreaName, newData) {
-    await migrateDataFiles(dataId, oldAreaName)
-    const dataResponse = await loadData(dataId)
-    let data = {}
-    if (dataResponse.status === 200) {
-        const migratedData = migrateData(dataResponse.data)
-        if (Object.keys(migratedData).length > 0) {
-            data = migratedData;
-        } else {
-            data = dataResponse.data
-        }
-    }
-    data[newData.updated.substr(0, 10)] = newData
-    data = limitData(data)
-    data = populateDailyCases(data);
-    return new DataResponse(data)
-}
-
-function populateDailyCases(data) {
-    const keys = Object.keys(data).reverse()
-    keys.forEach((key) => {
-        let yesterday = new Date(data[key].updatedTS - (60 * 60 * 24) * 1000)
-        let yesterdayKey = `${(''+yesterday.getDate()).padStart(2, '0')}.${(''+(yesterday.getMonth() + 1)).padStart(2, '0')}.${yesterday.getFullYear()}`
-        if (typeof data[yesterdayKey] !== 'undefined') {
-            data[key].area.dailyCases = data[key].area.areaCases - data[yesterdayKey].area.areaCases
-            data[key].state.dailyCases = data[key].state.cases - data[yesterdayKey].state.cases
-        } else {
-            if (data[key].area.dailyCases === null) data[key].area.dailyCases = -1
-            if (data[key].state.dailyCases === null) data[key].state.dailyCases = -1
-        }
-    });
-    return data
-}
-
-function limitData(data) {
-    const dataKeys = Object.keys(data);
-    const lastKeys = dataKeys.slice(Math.max(dataKeys.length - CONFIG_MAX_CACHED_DAYS, 0))
-    let dataLimited = {}
-    lastKeys.forEach(key => {
-        dataLimited[key] = data[key]
-    })
-    return dataLimited
-}
-
-function migrateData(loggedData) {
-    let migratedData = {}
-    Object.keys(loggedData).forEach((key, index) => {
-        // CHECK FOR OLD FORMAT
-        if (typeof loggedData[key].incidence !== 'undefined') {
-            const stateData = getStateData(loggedData[key].incidencePerState, loggedData[key].nameBL)
-            migratedData[key] = {
-                area: {
-                    incidence: loggedData[key].incidence,
-                    name: loggedData[key].areaName,
-                    dailyCases: -1,
-                    areaCases: loggedData[key].areaCases,
-                },
-                state: {
-                    incidence: loggedData[key].incidenceBL,
-                    name: loggedData[key].nameBL,
-                    cases: stateData.cases,
-                    dailyCases: -1
-                },
-                d: {
-                    incidence: loggedData[key].averageIncidence,
-                    dailyCases: loggedData[key].cases,
-                    r: loggedData[key].r
-                },
-                updated: loggedData[key].updated,
-                updatedTS: getTimestamp(loggedData[key].updated),
-                rs: loggedData[key].RS,
-            }
-        }
-    })
-    return migratedData
-}
-
 function getTimestamp(dateStr) {
     const regex = /([\d]+)\.([\d]+)\.([\d]+),\ ([0-2]?[0-9]):([0-5][0-9])/g;
     let m = regex.exec(dateStr)
     return new Date(m[3], m[2]-1, m[1], m[4], m[5]).getTime()
 }
 
-function getStateData (incidencePerState, nameBL) {
-    return incidencePerState.filter(item => {
-        return item.BL === nameBL
-    }).pop()
-}
-
-async function getRValue() {
-    const rDataStr = await new Request(apiRUrl).loadString()
-    const rData = parseRCSV(rDataStr) 
-    let lastR = 0
-    rData.forEach(item => {
-        if (typeof item[CONFIG_CSV_RVALUE_FIELD] !== 'undefined' && parseFloat(item[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) > 0) {
-            lastR = item;
-        }
-    })
-    return (lastR) ? parseFloat(lastR[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) : lastR
-}
-
 function getIncidenceColor(incidence) {
-    let color = LIMIT_GREEN_COLOR
-    if (incidence >= LIMIT_DARKRED) {
-        color = LIMIT_DARKRED_COLOR
-    } else if (incidence >= LIMIT_RED) {
-        color = LIMIT_RED_COLOR
-    } else if (incidence >= LIMIT_ORANGE) {
-        color = LIMIT_ORANGE_COLOR
-    } else if (incidence >= LIMIT_YELLOW) {
-        color = LIMIT_YELLOW_COLOR
+    let color = ENV.incidenceColors.green
+    if (incidence >= ENV.incidenceLimits.darkred) {
+        color = ENV.incidenceColors.darkred
+    } else if (incidence >= ENV.incidenceLimits.red) {
+        color = ENV.incidenceColors.red
+    } else if (incidence >= ENV.incidenceLimits.orange) {
+        color = ENV.incidenceColors.orange
+    } else if (incidence >= ENV.incidenceLimits.yellow) {
+        color = ENV.incidenceColors.yellow
     } else if (incidence === 0) {
-        color = LIMIT_GRAY_COLOR
+        color = ENV.incidenceColors.gray
     }
     return color
 }
@@ -597,40 +483,6 @@ function getDataForDate(data, dayOffset = 0) {
     return  (typeof data[dateKey] !== 'undefined') ? data[dateKey] : false;
 }
 
-function saveData(dataId, newData) {
-    let path = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    fm.writeString(path, JSON.stringify(newData))
-}
-
-function migrateDataFiles(dataId, oldAreaName) {
-    if (!fm.isDirectory(fmConfigDirectory)) fm.createDirectory(fmConfigDirectory)
-    let configPath = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    let oldConfigPaths = [
-        fm.joinPath(fm.documentsDirectory(), 'covid19' + oldAreaName + '.json'),
-        fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
-    ]
-    oldConfigPaths.forEach(oldPath => {
-        if (fm.isFileStoredIniCloud(oldPath) && !fm.isFileDownloaded(oldPath)) fm.downloadFileFromiCloud(oldPath)
-        if (fm.fileExists(oldPath) && !fm.fileExists(configPath)) try { fm.move(oldPath, configPath) } catch(e) { console.warn(e) }
-        // if (fm.fileExists(oldPath)) try { fm.remove(oldPath) } catch(e) { console.warn(e) }
-    })
-}
-
-async function loadData(dataId) {
-    let path = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    if (fm.isFileStoredIniCloud(path) && !fm.isFileDownloaded(path)) {
-        await fm.downloadFileFromiCloud(path)
-    }
-    if (fm.fileExists(path)) {
-        try {
-            return new DataResponse(JSON.parse(fm.readString(path)))
-         } catch (e) {
-             return new DataResponse(null, 500)
-         }
-    }
-    return new DataResponse(null, 404)
-}
-
 function parseRCSV(rDataStr) {
     let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0})
     let headers = lines.splice(0, 1)[0].split(";");
@@ -640,7 +492,7 @@ function parseRCSV(rDataStr) {
         let element = {};
         let j = 0;
         while (matches = valuesRegExp.exec(lines[i])) {
-            var value = matches[1] || matches[2]
+            let value = matches[1] || matches[2]
             value = value.replace(/\"\"/g, "\"")
             element[headers[j]] = value;
             j++;
@@ -661,19 +513,190 @@ class DataResponse {
     }
 }
 
-function getFilemanager() {
-    try {
-        fm = FileManager.iCloud()
-    } catch (e) {
-        fm = FileManager.local()
+class CustomFilemanager {
+    constructor () {
+        try {
+            this.fm = FileManager.iCloud()
+        } catch (e) {
+            this.fm = FileManager.local()
+        }
+        // check if user logged in iCloud
+        try { 
+            this.fm.documentsDirectory()
+        } catch(e) {
+            this.fm = FileManager.local()
+        }
+        this.configDirectory = this.fm.joinPath(this.fm.documentsDirectory(), '/coronaWidget')
     }
-    // check if user logged in iCloud
-    try { 
-        fm.documentsDirectory()
-    } catch(e) {
-        fm = FileManager.local()
+
+    saveData (dataId, newData) {
+        let path = this.fm.joinPath(this.configDirectory, 'coronaWidget' + dataId + '.json')
+        this.fm.writeString(path, JSON.stringify(newData))
     }
-    return fm
+
+    migrateDataFiles (dataId, oldAreaName) {
+        if (!this.fm.isDirectory(this.configDirectory)) this.fm.createDirectory(this.configDirectory)
+        let configPath = this.fm.joinPath(this.configDirectory, 'coronaWidget' + dataId + '.json')
+        let oldConfigPaths = [
+            this.fm.joinPath(this.fm.documentsDirectory(), 'covid19' + oldAreaName + '.json'),
+            this.fm.joinPath(this.fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
+        ]
+        oldConfigPaths.forEach(oldPath => {
+            if (this.fm.isFileStoredIniCloud(oldPath) && !this.fm.isFileDownloaded(oldPath)) this.fm.downloadFileFromiCloud(oldPath)
+            if (this.fm.fileExists(oldPath) && !this.fm.fileExists(configPath)) try { this.fm.move(oldPath, configPath) } catch(e) { console.warn(e) }
+            // if (this.fm.fileExists(oldPath)) try { this.fm.remove(oldPath) } catch(e) { console.warn(e) }
+        })
+    }
+
+    async loadData(dataId) {
+        let path = this.fm.joinPath(this.configDirectory, 'coronaWidget' + dataId + '.json')
+        if (this.fm.isFileStoredIniCloud(path) && !this.fm.isFileDownloaded(path)) {
+            await this.fm.downloadFileFromiCloud(path)
+        }
+        if (this.fm.fileExists(path)) {
+            try {
+                return new DataResponse(JSON.parse(this.fm.readString(path)))
+            } catch (e) {
+                return new DataResponse(null, 500)
+            }
+        }
+        return new DataResponse(null, 404)
+    }
 }
 
+class Data {
+    async prepareData (dataId, newData) {
+        const dataResponse = await fm.loadData(dataId)
+        let data = {}
+        if (dataResponse.status === 200) {
+            const migratedData = this.migrateData(dataResponse.data)
+            if (Object.keys(migratedData).length > 0) {
+                data = migratedData;
+            } else {
+                data = dataResponse.data
+            }
+        }
+        data[newData.updated.substr(0, 10)] = newData
+        data = this.limitData(data)
+        data = this.populateDailyCases(data);
+        return new DataResponse(data)
+    }
+    
+    populateDailyCases (data) {
+        const keys = Object.keys(data).reverse()
+        keys.forEach((key) => {
+            let yesterday = new Date(data[key].updatedTS - (60 * 60 * 24) * 1000)
+            let yesterdayKey = `${(''+yesterday.getDate()).padStart(2, '0')}.${(''+(yesterday.getMonth() + 1)).padStart(2, '0')}.${yesterday.getFullYear()}`
+            if (typeof data[yesterdayKey] !== 'undefined') {
+                data[key].area.dailyCases = data[key].area.areaCases - data[yesterdayKey].area.areaCases
+                data[key].state.dailyCases = data[key].state.cases - data[yesterdayKey].state.cases
+            } else {
+                if (data[key].area.dailyCases === null) data[key].area.dailyCases = -1
+                if (data[key].state.dailyCases === null) data[key].state.dailyCases = -1
+            }
+        });
+        return data
+    }
+    
+    limitData (data) {
+        const dataKeys = Object.keys(data);
+        const lastKeys = dataKeys.slice(Math.max(dataKeys.length - CFG.maxCachedDays, 0))
+        let dataLimited = {}
+        lastKeys.forEach(key => {
+            dataLimited[key] = data[key]
+        })
+        return dataLimited
+    }
+    
+    migrateData(loggedData) {
+        let migratedData = {}
+        Object.keys(loggedData).forEach((key) => {
+            // CHECK FOR OLD FORMAT
+            if (typeof loggedData[key].incidence !== 'undefined') {
+                const stateData = getStateData(loggedData[key].incidencePerState, loggedData[key].nameBL)
+                migratedData[key] = {
+                    area: {
+                        incidence: loggedData[key].incidence,
+                        name: loggedData[key].areaName,
+                        dailyCases: -1,
+                        areaCases: loggedData[key].areaCases,
+                    },
+                    state: {
+                        incidence: loggedData[key].incidenceBL,
+                        name: loggedData[key].nameBL,
+                        cases: stateData.cases,
+                        dailyCases: -1
+                    },
+                    d: {
+                        incidence: loggedData[key].averageIncidence,
+                        dailyCases: loggedData[key].cases,
+                        r: loggedData[key].r
+                    },
+                    updated: loggedData[key].updated,
+                    updatedTS: getTimestamp(loggedData[key].updated),
+                    rs: loggedData[key].RS,
+                }
+            }
+        })
+        return migratedData
+    }
+}
+
+class RkiService {
+    async getLocationData(location) {
+        const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS,IBZ';
+        const url = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
+        const response = await this.request(url)
+        return (response.status === 200) ? response.data.features[0].attributes : false
+    }
+    async getStateData(stateName) {
+        const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
+        const url = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
+        const response = await this.request(url)
+        if (response.status === 200) {
+            const allStatesData = response.data.features.map((f) => { return {
+                name: f.attributes.LAN_ew_GEN,
+                incidence: f.attributes.cases7_bl_per_100k,
+                cases: f.attributes.Fallzahl
+            }})
+            return {
+                state: allStatesData.filter(item => { return item.name === stateName }).pop(),
+                averageIncidence: allStatesData.reduce((a, b) => a + b.incidence, 0) / allStatesData.length
+            }
+        }
+        return false
+    }
+    async getCases() {
+        const url = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
+        const response = await this.request(url)
+        return (response.status === 200) ? response.data.features[0].attributes.value : -1         
+    }
+    async getRvalue() {
+        const url = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
+        const response = await this.request(url, false)
+        let r = 0
+        if (response.status === 200) {
+            const data = parseRCSV(response.data)
+            data.forEach(item => {
+                if (typeof item[CFG.csvRvalueField] !== 'undefined' && parseFloat(item[CFG.csvRvalueField].replace(',','.')) > 0) {
+                    r = parseFloat(item[CFG.csvRvalueField].replace(',','.'))
+                }
+            })
+        }
+        return r
+    }
+    async request(url, isJson = true) {
+        try {
+            const resData = new Request(url)
+            let data = (isJson) ? await resData.loadJSON() : await resData.loadString()
+            return new DataResponse(data)
+        } catch(e) {
+            console.warn(e)
+            return new DataResponse({}, 404)
+        }
+    }
+}
+
+const fm = new CustomFilemanager()
+const rkiService = new RkiService()
 await new IncidenceWidget().init()
