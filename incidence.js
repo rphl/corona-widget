@@ -42,7 +42,7 @@ const ENV = {
     incidenceColors: {
         darkred: new Color('#a1232b'),
         red: new Color('#f6000f'),
-        orange: new Color('##ff7927'),
+        orange: new Color('#ff7927'),
         yellow: new Color('#F5D800'),
         green: new Color('#1CC747'),
         gray: new Color('#d0d0d0')
@@ -242,8 +242,8 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
     }
-    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
-    addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '444444')
+    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '#444444')
+    addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '#444444')
 
     const areaNameStack = stackMainRowBox.addStack();
     areaNameStack.layoutHorizontally()
@@ -298,7 +298,7 @@ function addLabelTo(view, text, font = false, textColor = false, minScale = 1.0)
 }
 
 function formatNumber(number, minimumFractionDigits = 0) {
-    return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
+    return Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
 }
 
 function getTrendUpArrow(now, prev) {
@@ -484,13 +484,14 @@ function getDataForDate(data, dayOffset = 0) {
 }
 
 function parseRCSV(rDataStr) {
-    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0})
+    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length !== 0})
     let headers = lines.splice(0, 1)[0].split(";");
     let valuesRegExp = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\";]+)/g;
     let elements = []
     for (let i = 0; i < lines.length; i++) {
         let element = {};
         let j = 0;
+        let matches
         while (matches = valuesRegExp.exec(lines[i])) {
             let value = matches[1] || matches[2]
             value = value.replace(/\"\"/g, "\"")
