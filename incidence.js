@@ -503,7 +503,7 @@ function limitData(data) {
 
 function migrateData(loggedData) {
     let migratedData = {}
-    Object.keys(loggedData).forEach((key, index) => {
+    Object.keys(loggedData).forEach((key) => {
         // CHECK FOR OLD FORMAT
         if (typeof loggedData[key].incidence !== 'undefined') {
             const stateData = getStateData(loggedData[key].incidencePerState, loggedData[key].nameBL)
@@ -639,8 +639,9 @@ function parseRCSV(rDataStr) {
     for (let i = 0; i < lines.length; i++) {
         let element = {};
         let j = 0;
+        let matches
         while (matches = valuesRegExp.exec(lines[i])) {
-            var value = matches[1] || matches[2]
+            let value = matches[1] || matches[2]
             value = value.replace(/\"\"/g, "\"")
             element[headers[j]] = value;
             j++;
