@@ -14,12 +14,13 @@
 
 // ============= EXTRA KONFIGURATION ============= ============= ===========
 
-const CONFIG_OPEN_URL = false // open RKI dashboard on tap
+const CONFIG_OPEN_URL = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
 const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
 const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
+const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
 
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
@@ -124,7 +125,7 @@ class IncidenceWidget {
                     addIncidenceBlockTo(incidenceRow, data1, [2,padding,10,10], 1, dataResponse1.status)
                 }
             }
-            if (CONFIG_OPEN_URL) list.url = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4"
+            if (CONFIG_OPEN_URL) list.url = CONFIG_OPEN_URL
             list.refreshAfterDate = new Date(Date.now() + CONFIG_REFRESH_INTERVAL * 1000)
         } else {
             headerRow.addSpacer()
@@ -304,7 +305,12 @@ function formatNumber(number, minimumFractionDigits = 0) {
     return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
 }
 
-function getTrendUpArrow(now, prev) {
+function getTrendUpDownArrow(now, prev) {
+    if(!CONFIG_SHOW_CASES_TREND_ARROW) return ''
+    if(now < 0 && prev < 0) {
+        now = Math.abs(now)
+        prev = Math.abs(prev)
+    }
     return (now < prev) ? '↗' : (now > prev) ? '↑' : '→'
 }
 
