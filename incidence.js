@@ -305,7 +305,7 @@ function formatNumber(number, minimumFractionDigits = 0) {
     return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
 }
 
-function getTrendUpDownArrow(now, prev) {
+function getTrendUpArrow(now, prev) {
     if(!CONFIG_SHOW_CASES_TREND_ARROW) return ''
     if(now < 0 && prev < 0) {
         now = Math.abs(now)
