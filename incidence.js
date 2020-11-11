@@ -38,10 +38,12 @@ const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/
 const apiUrlNewCases = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
 const apiRUrl = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
 
+const LIMIT_DARKDARKRED = 200
 const LIMIT_DARKRED = 100
 const LIMIT_RED = 50
 const LIMIT_ORANGE = 35
 const LIMIT_YELLOW = 25
+const LIMIT_DARKDARKRED_COLOR = new Color('490c00')
 const LIMIT_DARKRED_COLOR = new Color('a1232b')
 const LIMIT_RED_COLOR = new Color('f6000f')
 const LIMIT_ORANGE_COLOR = new Color('ff7927')
@@ -567,7 +569,9 @@ async function getRValue() {
 
 function getIncidenceColor(incidence) {
     let color = LIMIT_GREEN_COLOR
-    if (incidence >= LIMIT_DARKRED) {
+    if (incidence > LIMIT_DARKDARKRED) {
+        color = LIMIT_DARKDARKRED_COLOR
+    } else if (incidence >= LIMIT_DARKRED) {
         color = LIMIT_DARKRED_COLOR
     } else if (incidence >= LIMIT_RED) {
         color = LIMIT_RED_COLOR
