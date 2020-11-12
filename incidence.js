@@ -21,6 +21,9 @@ const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved
 const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
 const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
+const CONFIG_SHOW_DECIMALS = true // show deciamls for area incidence value
+const CONFIG_SHOW_DECIMALS_BL = true // show deciamls for state incidence value
+
 
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
@@ -226,7 +229,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
 
     // === INCIDENCE
     let incidence = formatNumber(todayData.area.incidence.toFixed(1), 1)
-    if (!MEDIUMWIDGET && todayData.area.incidence >= 100) {
+    if (!CONFIG_SHOW_DECIMALS && todayData.area.incidence >= 100) {
         incidence = formatNumber(Math.round(todayData.area.incidence))
     }
     addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(todayData.area.incidence))
@@ -246,7 +249,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     incidenceBLStack.setPadding(2,3,2,3)
 
     let incidenceBL = formatNumber(todayData.state.incidence.toFixed(1), 1);
-    if (!MEDIUMWIDGET && todayData.state.incidence >= 100) {
+    if (!CONFIG_SHOW_DECIMALS_BL && todayData.state.incidence >= 100) {
         incidenceBL = formatNumber(Math.round(todayData.state.incidence))
     }
     if (yesterdayData) {
