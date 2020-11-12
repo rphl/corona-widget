@@ -1,5 +1,8 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
+// icon-color: yellow; icon-glyph: file-medical-alt;
+// Variables used by Scriptable.
+// These must be at the very top of the file. Do not edit.
 // icon-color: red; icon-glyph: briefcase-medical;
 
 /**
@@ -14,7 +17,7 @@
 
 // ============= EXTRA KONFIGURATION ============= ============= ===========
 
-const CONFIG_OPEN_URL = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
+const CONFIG_OPEN_URL = false // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
 const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
@@ -226,7 +229,9 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
 
     // === INCIDENCE
     let incidence = formatNumber(todayData.area.incidence.toFixed(1), 1)
-    if (todayData.area.incidence >= 100) incidence = formatNumber(Math.round(todayData.area.incidence))
+    if (!MEDIUMWIDGET) {
+        if (todayData.area.incidence >= 100) incidence = formatNumber(Math.round(todayData.area.incidence))
+    }
     addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(todayData.area.incidence))
     
     if (yesterdayData) {
@@ -244,7 +249,9 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     incidenceBLStack.setPadding(2,3,2,3)
 
     let incidenceBL = formatNumber(todayData.state.incidence.toFixed(1), 1);
-    if (todayData.state.incidence >= 100) incidenceBL = formatNumber(Math.round(todayData.state.incidence))
+    if (!MEDIUMWIDGET) {
+        if (todayData.state.incidence >= 100) incidenceBL = formatNumber(Math.round(todayData.state.incidence))
+    }
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
     }
