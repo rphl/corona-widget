@@ -21,8 +21,8 @@ const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved
 const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
 const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
 const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
-const CONFIG_SHOW_DECIMALS = true // show deciamls for area incidence value
-const CONFIG_SHOW_DECIMALS_BL = true // show deciamls for state incidence value
+const CONFIG_SHOW_DECIMALS = true // show decimals for area incidence value
+const CONFIG_SHOW_DECIMALS_BL = true // show decimals for state incidence value
 
 
 // ============= ============= ============= ============= =================
