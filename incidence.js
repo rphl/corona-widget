@@ -226,9 +226,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
 
     // === INCIDENCE
     let incidence = formatNumber(todayData.area.incidence.toFixed(1), 1)
-    if (!MEDIUMWIDGET && todayData.area.incidence >= 100) {
-        incidence = formatNumber(Math.round(todayData.area.incidence))
-    }
+    if (todayData.area.incidence >= 100) incidence = formatNumber(Math.round(todayData.area.incidence))
     addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(todayData.area.incidence))
     
     if (yesterdayData) {
@@ -246,9 +244,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     incidenceBLStack.setPadding(2,3,2,3)
 
     let incidenceBL = formatNumber(todayData.state.incidence.toFixed(1), 1);
-    if (!MEDIUMWIDGET && todayData.state.incidence >= 100) {
-        incidenceBL = formatNumber(Math.round(todayData.state.incidence))
-    }
+    if (todayData.state.incidence >= 100) incidenceBL = formatNumber(Math.round(todayData.state.incidence))
     if (yesterdayData) {
         incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
     }
