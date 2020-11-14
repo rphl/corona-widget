@@ -1,9 +1,6 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
 // icon-color: yellow; icon-glyph: file-medical-alt;
-// Variables used by Scriptable.
-// These must be at the very top of the file. Do not edit.
-// icon-color: yellow; icon-glyph: file-medical-alt;
 
 /**
  * Licence: Robert Koch-Institut (RKI), dl-de/by-2-0
