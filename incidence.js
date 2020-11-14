@@ -14,15 +14,15 @@
 
 // ============= EXTRA KONFIGURATION ============= ============= ===========
 
-const CONFIG_OPEN_URL = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
+const CONFIG_OPEN_URL = false // "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
 const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
-const CONFIG_CSV_RVALUE_FIELD = 'Schätzer_7_Tage_R_Wert' // numbered field (column), because of possible encoding changes in columns names on each update
+const CONFIG_CSV_RVALUE_FIELDS = ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'] // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
 const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
 const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
-const CONFIG_SHOW_DECIMALS = false // show decimals for area incidence value
-const CONFIG_SHOW_DECIMALS_BL = false // show decimals for state incidence value
+const CONFIG_SHOW_DECIMALS = true // show decimals for area incidence value
+const CONFIG_SHOW_DECIMALS_BL = true // show decimals for state incidence value
 
 
 // ============= ============= ============= ============= =================
@@ -46,12 +46,12 @@ const LIMIT_DARKRED = 100
 const LIMIT_RED = 50
 const LIMIT_ORANGE = 35
 const LIMIT_YELLOW = 25
-const LIMIT_DARKDARKRED_COLOR = new Color('490c00')
-const LIMIT_DARKRED_COLOR = new Color('a1232b')
-const LIMIT_RED_COLOR = new Color('f6000f')
-const LIMIT_ORANGE_COLOR = new Color('ff7927')
-const LIMIT_YELLOW_COLOR = new Color('F5D800')
-const LIMIT_GREEN_COLOR = new Color('1CC747')
+const LIMIT_DARKDARKRED_COLOR = new Color('941100')
+const LIMIT_DARKRED_COLOR = new Color('c01a00')
+const LIMIT_RED_COLOR = new Color('f92206')
+const LIMIT_ORANGE_COLOR = new Color('faa31b')
+const LIMIT_YELLOW_COLOR = new Color('F7dd31')
+const LIMIT_GREEN_COLOR = new Color('00ff80')
 const LIMIT_GRAY_COLOR = new Color('d0d0d0')
 const BUNDESLAENDER_SHORT = {
     'Baden-Württemberg': 'BW',
@@ -108,7 +108,8 @@ class IncidenceWidget {
             headerRow.addSpacer(3)
     
             let todayData = getDataForDate(data, 0)
-            addLabelTo(headerRow, (''+todayData.d.r.toFixed(2)).replace('.', ',') + 'ᴿ', Font.mediumSystemFont(14))
+            let r = (todayData.d.r !== 0) ? (''+ todayData.d.r.toFixed(2)).replace('.', ',') : 'n/v';
+             addLabelTo(headerRow, r + 'ᴿ', Font.mediumSystemFont(14))
             headerRow.addSpacer()
         
             let chartdata = getChartData(data, 'd')
@@ -566,12 +567,22 @@ async function getRValue() {
     const rDataStr = await new Request(apiRUrl).loadString()
     const rData = parseRCSV(rDataStr) 
     let lastR = 0
-    rData.forEach(item => {
-        if (typeof item[CONFIG_CSV_RVALUE_FIELD] !== 'undefined' && parseFloat(item[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) > 0) {
-            lastR = item;
-        }
-    })
-    return (lastR) ? parseFloat(lastR[CONFIG_CSV_RVALUE_FIELD].replace(',','.')) : lastR
+    if (rData.length === 0) return lastR
+    let availeRvalueField
+    Object.keys(rData[0]).forEach(key => {
+        CONFIG_CSV_RVALUE_FIELDS.forEach(possibleRKey => {
+            if (key === possibleRKey) availeRvalueField = possibleRKey;
+        })
+    });
+    let firstDatefield = Object.keys(rData[0])[0];
+    if (availeRvalueField) {
+        rData.forEach(item => {
+            if (item[firstDatefield].includes('.') && typeof item[availeRvalueField] !== 'undefined' && parseFloat(item[availeRvalueField].replace(',','.')) > 0) {
+                lastR = item;
+            }
+        })
+    }
+    return (lastR) ? parseFloat(lastR[availeRvalueField].replace(',','.')) : lastR
 }
 
 function getIncidenceColor(incidence) {
@@ -657,12 +668,11 @@ function parseRCSV(rDataStr) {
     for (let i = 0; i < lines.length; i++) {
         let element = {};
         let j = 0;
-        while (matches = valuesRegExp.exec(lines[i])) {
-            var value = matches[1] || matches[2]
-            value = value.replace(/\"\"/g, "\"")
-            element[headers[j]] = value;
-            j++;
-        }
+        let values = lines[i].split(';')
+         element = values.reduce(function(result, field, index) {
+             result[headers[index]] = field;
+             return result;
+           }, {})
         elements.push(element)
     }
     return elements
