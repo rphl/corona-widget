@@ -14,7 +14,7 @@
 
 // ============= EXTRA KONFIGURATION ============= ============= ===========
 
-const CONFIG_OPEN_URL = false // "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
+const CONFIG_OPEN_URL = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
 const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
 const CONFIG_GRAPH_SHOW_DAYS = 14
 const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
