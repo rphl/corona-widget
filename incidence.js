@@ -109,7 +109,7 @@ class IncidenceWidget {
     
             let todayData = getDataForDate(data, 0)
             let r = (todayData.d.r !== 0) ? (''+ todayData.d.r.toFixed(2)).replace('.', ',') : 'n/v';
-             addLabelTo(headerRow, r + 'ᴿ', Font.mediumSystemFont(14))
+            addLabelTo(headerRow, r + 'ᴿ', Font.mediumSystemFont(14))
             headerRow.addSpacer()
         
             let chartdata = getChartData(data, 'd')
@@ -669,10 +669,10 @@ function parseRCSV(rDataStr) {
         let element = {};
         let j = 0;
         let values = lines[i].split(';')
-         element = values.reduce(function(result, field, index) {
-             result[headers[index]] = field;
-             return result;
-           }, {})
+        element = values.reduce(function(result, field, index) {
+            result[headers[index]] = field;
+            return result;
+          }, {})
         elements.push(element)
     }
     return elements
