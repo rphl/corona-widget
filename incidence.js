@@ -21,6 +21,7 @@ const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved
 const CONFIG_CSV_RVALUE_FIELDS = ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'] // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
 const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
 const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
+const CONFIG_CACHE_LOCATION = false // cache last location to keep the location based widget showing the last succsessful location request
 
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
@@ -270,7 +271,7 @@ function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
     }
 
     let areaName = todayData.area.name
-    if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
+    if (hasStaticCoordinates(useStaticCoordsIndex) && staticCoordinates[useStaticCoordsIndex].name !== false) {
         areaName = staticCoordinates[useStaticCoordsIndex].name
     }
     areaName = areaName.toUpperCase().padEnd(50, ' ')
@@ -452,13 +453,18 @@ async function getData(useStaticCoordsIndex = false) {
             rs: attr.RS,
         }
         const preparedDataResponse = await prepareData(attr.RS, attr.GEN, res)
-        if (preparedDataResponse.status === 200) saveData(attr.RS, preparedDataResponse.data)
+        if (preparedDataResponse.status === 200) saveData(attr.RS, preparedDataResponse.data, useStaticCoordsIndex)
         return preparedDataResponse
     } catch (e) {
         console.warn(e)
-        if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].cacheId) {
+        const cachedDataId = await readDataIdFromCache(useStaticCoordsIndex)
+        if (hasStaticCoordinates(useStaticCoordsIndex) && staticCoordinates[useStaticCoordsIndex].cacheId) {
             console.warn('Begin loading from cache...' + staticCoordinates[useStaticCoordsIndex].cacheId)
             const loadedData = await loadData(staticCoordinates[useStaticCoordsIndex].cacheId)
+            return new DataResponse(loadedData.data, 418)
+        } else if (cachedDataId != 'undefined') {
+            console.warn('CONFIG_CACHE_LOCATION is set to true. Begin loading from cached data id: ' + cachedDataId + '.')
+            const loadedData = await loadData(cachedDataId)
             return new DataResponse(loadedData.data, 418)
         } else {
             console.warn('No cache id in "WidgetParameter" found. See readme.')
@@ -467,8 +473,25 @@ async function getData(useStaticCoordsIndex = false) {
     return new DataResponse({}, 404)
 }
 
+function writeDataIdToCache(dataId) {
+    let path = fm.joinPath(fmConfigDirectory, 'dataIdCache.json')
+    fm.writeString(path, dataId)
+}
+
+async function readDataIdFromCache(useStaticCoordsIndex = false) {
+    if (hasStaticCoordinates(useStaticCoordsIndex) && CONFIG_CACHE_LOCATION == true) {
+        let path = fm.joinPath(fmConfigDirectory, 'dataIdCache.json')
+        await fm.downloadFileFromiCloud(path)
+        if (fm.fileExists(path)) {
+            return fm.readString(path)
+        }
+    }
+    return 'undefined'
+}
+
 async function prepareData(dataId, oldAreaName, newData) {
-    await migrateDataFiles(dataId, oldAreaName)
+    migrateDataFiles(dataId, oldAreaName)
+    writeDataIdToCache(dataId)
     const dataResponse = await loadData(dataId)
     let data = {}
     if (dataResponse.status === 200) {
@@ -619,7 +642,10 @@ function getDataForDate(data, dayOffset = 0) {
     return  (typeof data[dateKey] !== 'undefined') ? data[dateKey] : false;
 }
 
-function saveData(dataId, newData) {
+function saveData(dataId, newData, useStaticCoordsIndex = false) {
+    if (hasStaticCoordinates(useStaticCoordsIndex) && CONFIG_CACHE_LOCATION == true) {
+        writeDataIdToCache(dataId)
+    }
     let path = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
     fm.writeString(path, JSON.stringify(newData))
 }
@@ -680,6 +706,13 @@ class DataResponse {
         this.data = data
         this.status = status
     }
+}
+
+function hasStaticCoordinates(useStaticCoordsIndex = false){
+    if (typeof staticCoordinates[useStaticCoordsIndex] == 'undefined') {
+        return false
+    }
+    return true
 }
 
 function getFilemanager() {
