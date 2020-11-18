@@ -34,7 +34,8 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 **Automatisch**
 * Via Kurzbefehle (Shortcuts) App
 * ...andere Option: https://github.com/rphl/corona-widget/issues/24
-* ...andere Option: https://github.com/rphl/corona-widget/issues/6#issuecomment-721099314
+
+[![Download with ScriptDude](https://scriptdu.de/download.svg)](https://scriptdu.de/?name=Corona-Widget&source=https%3A%2F%2Fraw.githubusercontent.com%2Frphl%2Fcorona-widget%2Fmaster%2Fincidence.js&docs=https%3A%2F%2Fgithub.com%2Frphl%2Fcorona-widget%2F)
 
 
 # Konfiguration
