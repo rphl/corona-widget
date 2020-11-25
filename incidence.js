@@ -18,7 +18,8 @@ const CFG = {
     graphShowDays: 21, // show days in graph
     csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
-    scriptSelfUpdate: false // script updates itself
+    scriptSelfUpdate: false, // script updates itself,
+    useFallbackIncidence: false // in some cacses the location does provide uptodate casename for calculation
 }
 
 // ============= ============= ============= ============= =================
@@ -732,7 +733,7 @@ class Helper {
             reversedData[i].incidence = (sumCasesLast7Days / ENV.cache[cacheID].meta.EWZ) * 100000
         }
         // @TODO Workaround use incidence from api
-        if (typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
+        if (CFG.useFallbackIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
             reversedData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
         }
         ENV.cache[cacheID].data = reversedData.reverse()
