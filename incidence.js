@@ -730,6 +730,9 @@ class Helper {
             let theDays = reversedData.slice(i + 1, i + 1 + 7) // without today
             let sumCasesLast7Days = theDays.reduce((a, b) => a + b.cases, 0)
             reversedData[i].incidence = (sumCasesLast7Days) / (ENV.cache[cacheID].meta.EWZ / 100000)
+        // @TODO Workaround use incidence from api
+        if (typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
+            reversedData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
         }
         ENV.cache[cacheID].data = reversedData.reverse()
     }
