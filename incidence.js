@@ -502,7 +502,7 @@ class Data {
         if (typeof dataIds['dataIndex' + useStaticCoordsIndex] !== 'undefined') {
             const areaData = await cfm.read('coronaWidget_' + dataIds['dataIndex' + useStaticCoordsIndex])
             const area = new Data(dataIds['dataIndex' + useStaticCoordsIndex], areaData.data.data, areaData.data.meta)
-            ENV.cache[useStaticCoordsIndex] = area
+            ENV.cache['s' + useStaticCoordsIndex] = area
 
             const stateData = await cfm.read('coronaWidget_' + areaData.data.meta.BL_ID)
             const state = new Data(areaData.data.meta.BL_ID, stateData.data.data, stateData.data.meta)
@@ -517,7 +517,7 @@ class Data {
         return ENV.status.error
     }
     static async load(useStaticCoordsIndex = false) {
-        if (typeof ENV.cache[useStaticCoordsIndex] !== 'undefined') return true
+        if (typeof ENV.cache['s' + useStaticCoordsIndex] !== 'undefined') return true
 
         let configId = btoa('cID' + JSON.stringify(ENV.staticCoordinates).replace(/[^a-zA-Z ]/g, ""))
         const location = await Helper.getLocation(useStaticCoordsIndex)
