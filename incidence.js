@@ -153,7 +153,7 @@ class IncidenceWidget {
 
         if (ENV.isMediumWidget && !ENV.isSameState) {
             topBar.space()
-            UIComp.smallIncidenceRow(topBar, null, { borderWidth: 0 })
+            UIComp.smallIncidenceRow(topBar, 'd', { borderWidth: 0 })
         }
 
         UIComp.incidenceRows(list)
