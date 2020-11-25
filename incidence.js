@@ -130,17 +130,17 @@ class IncidenceWidget {
             return list
         }
 
-        Helper.calcIncidence(0)
-        Helper.calcIncidence(ENV.cache[0].meta.BL_ID)
+        Helper.calcIncidence('s0')
+        Helper.calcIncidence(ENV.cache['s0'].meta.BL_ID)
         Helper.calcIncidence('d')
 
         ENV.isSameState = false;
         if (statusPos0 === statusPos1) {
-            ENV.isSameState = (ENV.cache[0].meta.BL_ID === ENV.cache[1].meta.BL_ID)
+            ENV.isSameState = (ENV.cache['s0'].meta.BL_ID === ENV.cache['s1'].meta.BL_ID)
         }
 
-        if (statusPos1) Helper.calcIncidence(1)
-        if (statusPos1 && !ENV.isSameState) Helper.calcIncidence(ENV.cache[1].meta.BL_ID)
+        if (statusPos1) Helper.calcIncidence('s1')
+        if (statusPos1 && !ENV.isSameState) Helper.calcIncidence(ENV.cache['s1'].meta.BL_ID)
 
         let topRStack = new UI(topBar).stack('v')
         Helper.log(ENV.cache.d.meta.r)
@@ -161,12 +161,12 @@ class IncidenceWidget {
 
         let stateBar = new UI(list).stack('h', [0, 0, 0, 0])
         stateBar.space(6)
-        let leftCacheID = ENV.cache[0].meta.BL_ID
+        let leftCacheID = ENV.cache['s0'].meta.BL_ID
         if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, leftCacheID) } else { UIComp.smallIncidenceBlock(stateBar, leftCacheID) }
         stateBar.space(4)
 
         // DEFAULT IS GER... else STATE
-        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState) ? ENV.cache[1].meta.BL_ID : 'd'
+        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState) ? ENV.cache['s1'].meta.BL_ID : 'd'
         if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, rightCacheID) } else { UIComp.smallIncidenceBlock(stateBar, rightCacheID) }
         stateBar.space(6)
         list.addSpacer(5)
@@ -212,16 +212,16 @@ class UIComp {
             padding = [2, 8, 2, 8]
         }
         let bb2 = new UI(bb).stack('h', padding, '#99999920', 10)
-        UIComp.incidenceRow(bb2, 0)
+        UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
         if (ENV.isMediumWidget) {
-            UIComp.incidenceRow(bb3, 1)
+            UIComp.incidenceRow(bb3, 's1')
         } else {
             bb3.space()
-            UIComp.areaIcon(bb3, ENV.cache[0].meta.IBZ)
+            UIComp.areaIcon(bb3, ENV.cache['s0'].meta.IBZ)
             bb3.space(3)
-            bb3.text(ENV.cache[0].meta.GEN.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
+            bb3.text(ENV.cache['s0'].meta.GEN.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
             bb3.space(8) // center title if small widget
             bb3.space()
         }
@@ -353,7 +353,7 @@ class UI {
         max = (max <= 0) ? 10 : max;
         let w = Math.max(2, Math.round((width - (graphData.length * 2)) / graphData.length))
         let xOffset = (!alignLeft) ? (width - (graphData.length * (w + 1))) : 0
-        for(let i = 0; i < CFG.graphShowDays; i++) {
+        for (let i = 0; i < CFG.graphShowDays; i++) {
             let item = graphData[i]
             let value = parseFloat(item.cases)
             if (value === -1 && i == 0) value = 10;
@@ -507,7 +507,7 @@ class Data {
             const state = new Data(areaData.data.meta.BL_ID, stateData.data.data, stateData.data.meta)
             ENV.cache[areaData.data.meta.BL_ID] = state
 
-            const dData =  await cfm.read('coronaWidget_d')
+            const dData = await cfm.read('coronaWidget_d')
             const d = new Data(areaData.data.meta.BL_ID, dData.data.data, dData.data.meta)
             ENV.cache.d = d
 
@@ -535,7 +535,7 @@ class Data {
         areaData.data = areaCases
         areaData.meta = locationData
         await cfm.save(areaData)
-        ENV.cache[useStaticCoordsIndex] = areaData
+        ENV.cache['s' + useStaticCoordsIndex] = areaData
 
         // STATE DATA
         if (typeof ENV.cache[locationData.BL_ID] === 'undefined') {
@@ -564,7 +564,7 @@ class Data {
             ENV.cache.d = dData
         }
 
-        if (typeof ENV.cache[useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
+        if (typeof ENV.cache['s' + useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
             return ENV.status.ok
         }
         return ENV.status.error
