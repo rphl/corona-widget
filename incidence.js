@@ -219,7 +219,7 @@ class UIComp {
             UIComp.incidenceRow(bb3, 1)
         } else {
             bb3.space()
-            UIComp.areaIcon(bb3, 40)
+            UIComp.areaIcon(bb3, ENV.cache[0].meta.IBZ)
             bb3.space(3)
             bb3.text(ENV.cache[0].meta.GEN.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
             bb3.space(8) // center title if small widget
