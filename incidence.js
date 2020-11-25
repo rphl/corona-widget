@@ -222,7 +222,11 @@ class UIComp {
             bb3.space()
             UIComp.areaIcon(bb3, ENV.cache['s0'].meta.IBZ)
             bb3.space(3)
-            bb3.text(ENV.cache['s0'].meta.GEN.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
+            let areaName = ENV.cache['s0'].meta.GEN
+            if (typeof ENV.staticCoordinates[0] !== 'undefined' && ENV.staticCoordinates[0].name !== false) {
+                areaName = ENV.staticCoordinates[0].name
+            }
+            bb3.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
             bb3.space(8) // center title if small widget
             bb3.space()
         }
@@ -240,8 +244,9 @@ class UIComp {
             UIComp.areaIcon(b, ENV.cache[cacheID].meta.IBZ)
             b.space(3)
             let areaName = ENV.cache[cacheID].meta.GEN
-            if (typeof ENV.staticCoordinates[cacheID] !== 'undefined' && ENV.staticCoordinates[cacheID].name !== false) {
-                areaName = ENV.staticCoordinates[cacheID].name
+            let cacheIndex = parseInt(cacheID.replace('s', ''))
+            if (typeof ENV.staticCoordinates[cacheIndex] !== 'undefined' && ENV.staticCoordinates[cacheIndex].name !== false) {
+                areaName = ENV.staticCoordinates[cacheIndex].name
             }
             b.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 1)
         }
