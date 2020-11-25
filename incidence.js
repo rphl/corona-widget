@@ -1,26 +1,25 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: yellow; icon-glyph: file-medical-alt;
+// icon-color: red; icon-glyph: briefcase-medical;
 
 /**
  * Licence: Robert Koch-Institut (RKI), dl-de/by-2-0
  * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- * BASE VERSION FORKED FROM AUTHOR: kevinkub https://gist.github.com/kevinkub/46caebfebc7e26be63403a7f0587f664/c5db6e2c1c45a41bdd4a85990c0d0b883915b3c3
- * THIS VERSION (AUTHOR: https://github.com/rphl) https://github.com/rphl/corona-widget/
+ * AUTHOR: https://github.com/rphl - https://github.com/rphl/corona-widget/
+ * ISSUES: https://github.com/rphl/corona-widget/issues
  * 
+ * (Old Version see: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js)
  */
 
-// ============= EXTRA KONFIGURATION ============= ============= ===========
-
-const CONFIG_OPEN_URL = "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4" // open RKI dashboard on tap, CONFIG_OPEN_URL=false to disable
-const CONFIG_SHOW_AREA_ICON = true // show "Icon" before AreaName: Like KS = Kreisfreie Stadt, LK = Landkreis,...
-const CONFIG_GRAPH_SHOW_DAYS = 14
-const CONFIG_MAX_CACHED_DAYS = 14 // WARNING!!! Smaller values will delete saved days > CONFIG_MAX_CACHED_DAYS. Backup JSON first ;-)
-const CONFIG_CSV_RVALUE_FIELDS = ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'] // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
-const CONFIG_REFRESH_INTERVAL = 60 * 60 // interval the widget is update in (in seconds)
-const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
+const CFG = {
+    openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
+    graphShowDays: 21, // show days in graph
+    csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
+    scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
+    scriptSelfUpdate: false // script updates itself
+}
 
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
@@ -30,671 +29,732 @@ const CONFIG_SHOW_CASES_TREND_ARROW = true // show trend arrow for cases
 // https://github.com/rphl/corona-widget/blob/master/README.md
 // ============= ============= ============= ============= =================
 
-
-const outputFields = 'GEN,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,RS,IBZ';
-const apiUrl = (location) => `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
-const outputFieldsStates = 'Fallzahl,LAN_ew_GEN,cases7_bl_per_100k';
-const apiUrlStates = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/Coronaf%E4lle_in_den_Bundesl%E4ndern/FeatureServer/0/query?where=1%3D1&outFields=${outputFieldsStates}&returnGeometry=false&outSR=4326&f=json`
-const apiUrlNewCases = 'https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22value%22%7D%5D&resultType=standard&cacheHint=true'
-const apiRUrl = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
-
-const LIMIT_DARKDARKRED = 250
-const LIMIT_DARKRED = 100
-const LIMIT_RED = 50
-const LIMIT_ORANGE = 35
-const LIMIT_YELLOW = 25
-const LIMIT_DARKDARKRED_COLOR = new Color('941100')
-const LIMIT_DARKRED_COLOR = new Color('c01a00')
-const LIMIT_RED_COLOR = new Color('f92206')
-const LIMIT_ORANGE_COLOR = new Color('faa31b')
-const LIMIT_YELLOW_COLOR = new Color('f7dd31')
-const LIMIT_GREEN_COLOR = new Color('00ff80')
-const LIMIT_GRAY_COLOR = new Color('d0d0d0')
-const BUNDESLAENDER_SHORT = {
-    'Baden-Württemberg': 'BW',
-    'Bayern': 'BY',
-    'Berlin': 'BE',
-    'Brandenburg': 'BB',
-    'Bremen': 'HB', 
-    'Hamburg': 'HH',
-    'Hessen': 'HE',
-    'Mecklenburg-Vorpommern': 'MV',
-    'Niedersachsen': 'NI',
-    'Nordrhein-Westfalen': 'NRW',
-    'Rheinland-Pfalz': 'RP',
-    'Saarland': 'SL',
-    'Sachsen': 'SN',
-    'Sachsen-Anhalt': 'ST',
-    'Schleswig-Holstein': 'SH',
-    'Thüringen': 'TH'
-};
-
-let MEDIUMWIDGET = (config.widgetFamily === 'medium') ? true : false
-let staticCoordinates = []
-if (args.widgetParameter) {
-    staticCoordinates = parseInput(args.widgetParameter)
-    if (typeof staticCoordinates[1] !== 'undefined' && Object.keys(staticCoordinates[1]).length >= 3) {
-        MEDIUMWIDGET = true
+const ENV = {
+    incidenceColors: {
+        darkdarkred: { limit: 250, color: new Color('#941100') },
+        darkred: { limit: 100, color: new Color('#c01a00') },
+        red: { limit: 50, color: new Color('#f92206') },
+        orange: { limit: 35, color: new Color('#faa31b') },
+        yellow: { limit: 25, color: new Color('#f7dd31') },
+        green: { limit: 1, color: new Color('#00cc00') },
+        gray: { limit: 0, color: new Color('#d0d0d0') }
+    },
+    statesAbbr: {
+        '8': 'BW',
+        '9': 'BY',
+        '11': 'BE',
+        '12': 'BB',
+        '4': 'HB',
+        '2': 'HH',
+        '6': 'HE',
+        '13': 'MV',
+        '3': 'NI',
+        '5': 'NRW',
+        '7': 'RP',
+        '10': 'SL',
+        '14': 'SN',
+        '15': 'ST',
+        '1': 'SH',
+        '16': 'TH'
+    },
+    areaIBZ: {
+        '40': 'KS',// Kreisfreie Stadt
+        '41': 'SK', // Stadtkreis
+        '42': 'K', // Kreis
+        '46': 'K', // Sonderverband offiziel Kreis
+        '43': 'LK', // Landkreis
+        '45': 'LK', // Sonderverband offiziel Landkreis
+        '': 'BZ'
+    },
+    fonts: {
+        xlarge: Font.boldSystemFont(26),
+        large: Font.mediumSystemFont(20),
+        medium: Font.mediumSystemFont(14),
+        normal: Font.mediumSystemFont(12),
+        small: Font.boldSystemFont(11),
+        small2: Font.boldSystemFont(10),
+        xsmall: Font.boldSystemFont(9)
+    },
+    status: {
+        nogps: 555,
+        offline: 418,
+        notfound: 404,
+        error: 500,
+        ok: 200
+    },
+    isMediumWidget: config.widgetFamily === 'medium',
+    isSameState: false,
+    cache: {},
+    staticCoordinates: [],
+    script: {
+        selfUpdate: CFG.scriptSelfUpdate,
+        filename: this.module.filename.replace(/^.*[\\\/]/, ''),
+        updateStatus: ''
     }
 }
 
-var fm = getFilemanager()
-let fmConfigDirectory = fm.joinPath(fm.documentsDirectory(), '/coronaWidget')
-let data = {}
-
 class IncidenceWidget {
+    constructor(coordinates = []) {
+        if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
+        ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
+        if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
+        this.selfUpdate()
+    }
     async init() {
-        const widget = await this.createWidget()
-        widget.setPadding(0,0,0,0)
+        this.widget = await this.createWidget()
+        this.widget.setPadding(0, 0, 0, 0)
         if (!config.runsInWidget) {
-            if (MEDIUMWIDGET) {
-                await widget.presentMedium()
-            } else {
-                await widget.presentSmall()
-            }
+            (ENV.isMediumWidget) ? await this.widget.presentMedium() : await this.widget.presentSmall()
         }
-        Script.setWidget(widget)
+        Script.setWidget(this.widget)
         Script.complete()
     }
     async createWidget() {
         const list = new ListWidget()
-        const headerRow = addHeaderRowTo(list)
-        const dataResponse = await getData(0)        
-        if (dataResponse.status === 200 || dataResponse.status === 418) {
-            let data = dataResponse.data
-            headerRow.addSpacer(3)
-    
-            let todayData = getDataForDate(data, 0)
-            let r = (todayData.d.r !== 0) ? (''+ todayData.d.r.toFixed(2)).replace('.', ',') : 'n/v';
-            addLabelTo(headerRow, r + 'ᴿ', Font.mediumSystemFont(14))
-            headerRow.addSpacer()
-        
-            let chartdata = getChartData(data, 'd')
-            let chartDataTitle = getGetLastCasesAndTrend(data, 'd')
-            addChartBlockTo(headerRow, chartDataTitle, chartdata, false)
-            headerRow.addSpacer(0)
-            list.addSpacer(3)
+        const statusPos0 = await Data.load(0)
+        const statusPos1 = (ENV.isMediumWidget) ? await Data.load(1) : false
 
-            const incidenceRow = list.addStack()
-            incidenceRow.layoutHorizontally()
-            incidenceRow.centerAlignContent()
-        
-            let padding = (MEDIUMWIDGET) ? 5 : 10
-            addIncidenceBlockTo(incidenceRow, data, [2,10,10,padding], 0, dataResponse.status)
-            if (MEDIUMWIDGET) {
-                const dataResponse1 = await getData(1)
-                if (dataResponse1.status === 200 || dataResponse1.status === 418) {
-                    let data1 = dataResponse1.data
-                    addIncidenceBlockTo(incidenceRow, data1, [2,padding,10,10], 1, dataResponse1.status)
-                }
-            }
-            if (CONFIG_OPEN_URL) list.url = CONFIG_OPEN_URL
-            list.refreshAfterDate = new Date(Date.now() + CONFIG_REFRESH_INTERVAL * 1000)
-        } else {
-            headerRow.addSpacer()
+        // UI ===============
+        let topBar = new UI(list).stack('h', [4, 8, 4, 4])
+        topBar.text("🦠", Font.mediumSystemFont(22))
+        topBar.space(3)
+
+        if (statusPos0 === ENV.status.error || statusPos1 === ENV.status.error) {
+            topBar.space()
             list.addSpacer()
-            let errorBox = list.addStack()
-            errorBox.setPadding(10, 10, 10, 10)
-            addLabelTo(errorBox, "⚡️ Daten konnten nicht geladen werden. \nWidget öffnen für reload. \n\nTIPP: Cache Id in Widgetparamter setzen für Offline modus.", Font.mediumSystemFont(10), Color.gray())
+            let statusError = new UI(list).stack('v', [4, 6, 4, 6])
+            statusError.text('⚡️', ENV.fonts.medium)
+            statusError.text('Standortdaten konnten nicht geladen werden. \nKein Cache verfügbar. \n\nBitte später nochmal versuchen.', ENV.fonts.small, '#999')
+            list.addSpacer(4)
+            list.refreshAfterDate = new Date(Date.now() + ((CFG.scriptRefreshInterval / 2) * 1000))
+            return list
         }
+
+        Helper.calcIncidence(0)
+        Helper.calcIncidence(ENV.cache[0].meta.BL_ID)
+        Helper.calcIncidence('d')
+
+        ENV.isSameState = false;
+        if (statusPos0 === statusPos1) {
+            ENV.isSameState = (ENV.cache[0].meta.BL_ID === ENV.cache[1].meta.BL_ID)
+        }
+
+        if (statusPos1) Helper.calcIncidence(1)
+        if (statusPos1 && !ENV.isSameState) Helper.calcIncidence(ENV.cache[1].meta.BL_ID)
+
+        let topRStack = new UI(topBar).stack('v')
+        Helper.log(ENV.cache.d.meta.r)
+        topRStack.text(Format.number(ENV.cache.d.meta.r, 2, 'n/v') + 'ᴿ', ENV.fonts.medium)
+        topRStack.text(Format.dateStr(ENV.cache.d.getDay().date), ENV.fonts.xsmall, '#777')
+
+        topBar.space()
+        UIComp.statusBlock(topBar, statusPos0)
+        topBar.space(4)
+
+        if (ENV.isMediumWidget && !ENV.isSameState) {
+            topBar.space()
+            UIComp.smallIncidenceRow(topBar, null, { borderWidth: 0 })
+        }
+
+        UIComp.incidenceRows(list)
+        list.addSpacer(3)
+
+        let stateBar = new UI(list).stack('h', [0, 0, 0, 0])
+        stateBar.space(6)
+        let leftCacheID = ENV.cache[0].meta.BL_ID
+        if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, leftCacheID) } else { UIComp.smallIncidenceBlock(stateBar, leftCacheID) }
+        stateBar.space(4)
+
+        // DEFAULT IS GER... else STATE
+        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState) ? ENV.cache[1].meta.BL_ID : 'd'
+        if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, rightCacheID) } else { UIComp.smallIncidenceBlock(stateBar, rightCacheID) }
+        stateBar.space(6)
+        list.addSpacer(5)
+
+        // UI ===============
+        if (CFG.openUrl) list.url = CFG.openUrl
+        list.refreshAfterDate = new Date(Date.now() + (CFG.scriptRefreshInterval * 1000))
         return list
     }
-}
-
-function getGetLastCasesAndTrend(data, property) {
-    // TODAY
-    let casesTrendStr = '';
-    let todayData = getDataForDate(data)
-    let todayCases = todayData[property].dailyCases;
-    let yesterdayCases = false
-    let beforeYesterdayCases = false
-    if (todayCases !== -1) {
-        casesTrendStr = '+' + formatNumber(todayCases)
-        // YESTERDAY
-        let yesterdayData = getDataForDate(data, 1)
-        if (yesterdayData) yesterdayCases = yesterdayData[property].dailyCases;
-        // BEFOREYESTERDAY
-        let beforeYesterdayData = getDataForDate(data, 2)
-        if (beforeYesterdayData) beforeYesterdayCases = beforeYesterdayData[property].dailyCases;
-        if (todayCases && yesterdayCases !== false && beforeYesterdayCases !== false) {
-            casesTrendStr += getTrendUpArrow(todayCases - yesterdayCases, yesterdayCases - beforeYesterdayCases)
-        }
-    } else {
-        casesTrendStr = 'n/v'
-    }
-    return casesTrendStr
-}
-
-function getChartData (data, property) {
-    const allKeys = Object.keys(data).reverse()
-    const chartdata = new Array(CONFIG_GRAPH_SHOW_DAYS).fill({ value: 0, incidence: 0 });
-    allKeys.forEach((key, index) => {
-        if (typeof chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] !== 'undefined') {
-            chartdata[CONFIG_GRAPH_SHOW_DAYS - 1 - index] = {
-                value: (data[key][property]['dailyCases']) ? data[key][property]['dailyCases'] : 0,
-                incidence: data[key][property]['incidence']
-            }
-        }
-    })
-    return chartdata
-}
-
-function addIncidenceBlockTo(view, data, padding, useStaticCoordsIndex, status = 200) {
-    const incidenceBlockBox = view.addStack()
-    incidenceBlockBox.setPadding(padding[0], 0, padding[2], 0)
-    incidenceBlockBox.layoutHorizontally()
-    incidenceBlockBox.addSpacer(padding[1])
-    
-    const incidenceBlockRows = incidenceBlockBox.addStack()
-    incidenceBlockRows.backgroundColor = new Color('cccccc', 0.1)
-    incidenceBlockRows.setPadding(0,0,0,0)
-    incidenceBlockRows.cornerRadius = 14
-    incidenceBlockRows.layoutVertically()
-
-    addIncidence(incidenceBlockRows, data, useStaticCoordsIndex, status)
-    addTrendsBarToIncidenceBlock(incidenceBlockRows, data)
-    incidenceBlockRows.addSpacer(2)
-    incidenceBlockBox.addSpacer(padding[3])
-    
-    return incidenceBlockBox;
-}
-
-function addIncidence(view, data, useStaticCoordsIndex = false, status = 200) {
-    const todayData = getDataForDate(data)
-    const yesterdayData = getDataForDate(data, 1)
-
-    const incidenceBox = view.addStack()
-    incidenceBox.setPadding(6,8,6,8)
-    incidenceBox.cornerRadius = 12
-    incidenceBox.backgroundColor = new Color('999999', 0.1)
-    incidenceBox.layoutHorizontally()
-    
-    const stackMainRowBox = incidenceBox.addStack()
-    stackMainRowBox.layoutVertically()
-    stackMainRowBox.addSpacer(0)
-
-    if (useStaticCoordsIndex === 0 && status === 200) {
-        addLabelTo(stackMainRowBox, todayData.updated.substr(0, 10), Font.mediumSystemFont(10), new Color('888888'))
-        stackMainRowBox.addSpacer(0)
-    } else if (useStaticCoordsIndex === 0 && status === 418) {
-        addLabelTo(stackMainRowBox, '⚡️ Offlinemodus!', Font.mediumSystemFont(10), new Color('dbc43d'))
-        stackMainRowBox.addSpacer(0)
-    } else {
-        stackMainRowBox.addSpacer(10)
-    }
-    const stackMainRow = stackMainRowBox.addStack()
-    stackMainRow.centerAlignContent()
-
-    // === INCIDENCE
-    let incidence = formatNumber(todayData.area.incidence.toFixed(1), 1)
-    if (todayData.area.incidence >= 100) incidence = formatNumber(Math.round(todayData.area.incidence))
-    addLabelTo(stackMainRow, incidence, Font.boldSystemFont(27), getIncidenceColor(todayData.area.incidence))
-    
-    if (yesterdayData) {
-        const incidenceTrend = getTrendArrow(todayData.area.incidence, yesterdayData.area.incidence);
-        const incidenceLabelColor = (incidenceTrend === '↑') ? LIMIT_RED_COLOR : (incidenceTrend === '↓') ? LIMIT_GREEN_COLOR : new Color('999999')
-        addLabelTo(stackMainRow, incidenceTrend, Font.boldSystemFont(27), incidenceLabelColor)
-    }
-    stackMainRow.addSpacer(4)
-
-    // === BL INCIDENCE
-    const incidenceBLStack = stackMainRow.addStack();
-    incidenceBLStack.layoutVertically()
-    incidenceBLStack.backgroundColor = new Color('dfdfdf')
-    incidenceBLStack.cornerRadius = 4
-    incidenceBLStack.setPadding(2,3,2,3)
-
-    let incidenceBL = formatNumber(todayData.state.incidence.toFixed(1), 1);
-    if (todayData.state.incidence >= 100) incidenceBL = formatNumber(Math.round(todayData.state.incidence))
-    if (yesterdayData) {
-        incidenceBL += getTrendArrow(todayData.state.incidence, yesterdayData.state.incidence)
-    }
-    addLabelTo(incidenceBLStack, incidenceBL, Font.mediumSystemFont(9), '444444')
-    addLabelTo(incidenceBLStack, todayData.state.name, Font.mediumSystemFont(9), '444444')
-
-    const areaNameStack = stackMainRowBox.addStack();
-    areaNameStack.layoutHorizontally()
-    areaNameStack.setPadding(0,0,0,0)
-    areaNameStack.centerAlignContent()
-
-    let areaIcon = getAreaIcon(todayData.area.areaIBZ)
-    if (areaIcon && CONFIG_SHOW_AREA_ICON) {
-        let areaNameIconBox = areaNameStack.addStack()
-        areaNameIconBox.borderColor = new Color('999999', 0.3)
-        areaNameIconBox.borderWidth = 2
-        areaNameIconBox.cornerRadius = 2
-        areaNameIconBox.setPadding(1,3,1,3)
-        let areaIconLabel = areaNameIconBox.addText(areaIcon)
-        areaIconLabel.font = Font.mediumSystemFont(9)
-        areaNameStack.addSpacer(3)
-    }
-
-    let areaName = todayData.area.name
-    if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].name !== false) {
-        areaName = staticCoordinates[useStaticCoordsIndex].name
-    }
-    areaName = areaName.toUpperCase().padEnd(50, ' ')
-    const areanameLabel = addLabelTo(areaNameStack, areaName, Font.mediumSystemFont(14))
-    areanameLabel.lineLimit = 1
-    areaNameStack.addSpacer()
-    stackMainRowBox.addSpacer(0)
-}
-
-function getAreaIcon(areaIBZ) {
-    switch (areaIBZ) {
-        case 40: // Kreisfreie Stadt
-            return 'KS'
-        case 41: // Stadtkreis
-            return 'SK'
-        case 42: // Kreis
-        case 46: // Sonderverband offiziel Kreis
-            return 'K'
-        case 43: // Landkreis
-        case 45: // Sonderverband offiziel Landkreis
-            return 'LK'
-    }
-    return 'BZ' // Bezirk
-}
-
-function addLabelTo(view, text, font = false, textColor = false, minScale = 1.0) {
-    const label = view.addText('' + text)
-    label.minimumScaleFactor = minScale
-    if (font) label.font = font
-    if (textColor) label.textColor = (typeof textColor === 'string') ? new Color(textColor) : textColor;
-    return label
-}
-
-function formatNumber(number, minimumFractionDigits = 0) {
-    return new Number(number).toLocaleString('de-DE', { minimumFractionDigits: minimumFractionDigits })
-}
-
-function getTrendUpArrow(now, prev) {
-    if(!CONFIG_SHOW_CASES_TREND_ARROW) return ''
-    if(now < 0 && prev < 0) {
-        now = Math.abs(now)
-        prev = Math.abs(prev)
-    }
-    return (now < prev) ? '↗' : (now > prev) ? '↑' : '→'
-}
-
-function getTrendArrow(value1, value2) {
-    return (value1 < value2) ? '↓' : (value1 > value2) ? '↑' : '→'
-}
-
-function addTrendsBarToIncidenceBlock(view, data) {
-    const trendsBarBox = view.addStack()
-    trendsBarBox.setPadding(3,8,3,8)
-    trendsBarBox.layoutHorizontally()
-
-    // AREA TREND
-    let chartdata = getChartData(data, 'area')
-    let chartDataTitle = getGetLastCasesAndTrend(data, 'area')
-    /*DEMO!!!! chartdata = [{incidence: 0, value: 0},{incidence: 10, value: 10}{incidence: 20, value: 20},{incidence: 30, value: 30},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 60, value: 60},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 20, value: 25},{incidence: 10, value: 20},{incidence: 30, value: 30},]*/
-    addChartBlockTo(trendsBarBox, chartDataTitle, chartdata, true)
-    trendsBarBox.addSpacer()
-
-    // STATE TREND
-    let chartdataBL = getChartData(data, 'state')
-    let chartDataBLTitle = getGetLastCasesAndTrend(data, 'state')
-    /* DEMO!!!! chartdataBL = [{incidence: 0, value: 0},{incidence: 20, value: 20},{incidence: 40, value: 40},{incidence: 50, value: 50},{incidence: 70, value: 70},{incidence: 100, value: 100},{incidence: 110, value: 110},{incidence: 77, value: 77},{incidence: 70, value: 70},{incidence: 39, value: 39},{incidence: 30, value: 40},{incidence: 30, value: 30},{incidence: 40, value: 60},{incidence: 30, value: 20}]*/
-    addChartBlockTo(trendsBarBox, chartDataBLTitle, chartdataBL, false)
-}
-
-function addHeaderRowTo(view) {
-    const headerRow = view.addStack()
-    headerRow.setPadding(8,8,4,8)
-    headerRow.centerAlignContent()
-    const headerIcon = headerRow.addText("🦠")
-    headerIcon.font = Font.mediumSystemFont(16)
-    return headerRow;
-}
-
-function addChartBlockTo(view, trendtitle, chartdata, alignLeft = true) {
-    let block = view.addStack()
-    block.setPadding(0,0,0,0)
-    block.layoutVertically()
-    block.size = new Size(58, 24)
-
-    let textRow = block.addStack()
-    if (!alignLeft) textRow.addSpacer()
-    let chartText = textRow.addText(trendtitle)
-    if (alignLeft) textRow.addSpacer()
-    chartText.font = Font.mediumSystemFont(10)
-
-    let graphImg = generateGraph(chartdata, 58, 10, alignLeft).getImage()
-    let chartImg = block.addImage(graphImg)
-    chartImg.resizable = false
-}
-
-function generateGraph(data, width, height, alignLeft = true) {
-    let context = new DrawContext()
-    context.size = new Size(width, height)
-    context.opaque = false
-    let max = Math.max.apply(Math, data.map(function(o) { return o.value; }))
-    max = (max <= 0) ? 10 : max;
-    let w = Math.round((width - (data.length * 2)) / data.length)
-    let xOffset = (!alignLeft) ? (width - (data.length * (w + 1))) : 0
-    data.forEach((item, index) => {
-        let value = parseFloat(item.value)
-        if (value === -1 && index == 0) value = 10;
-        let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
-        let x = xOffset + (w + 1) * index
-        let rect = new Rect(x, 0, w, h)
-        context.setFillColor(getIncidenceColor((item.value >= 1) ? item.incidence : 0))
-        context.fillRect(rect)
-    })
-    return context
-}
-
-async function getLocation(staticCoordinateIndex = false) {
-    try {
-        if (staticCoordinates && typeof staticCoordinates[staticCoordinateIndex] !== 'undefined' && Object.keys(staticCoordinates[staticCoordinateIndex]).length >= 3) {
-            return staticCoordinates[staticCoordinateIndex]
-        } else {
-            Location.setAccuracyToThreeKilometers()
-            return await Location.current()
-        }
-    } catch (e) {
-        return null;
-    }
-}
-
-async function getData(useStaticCoordsIndex = false) {
-    let rValue = 0
-    try {
-        rValue = await getRValue()
-    } catch(e) { console.warn(e) }
-  
-    let cases = -1
-    try {
-        let dataCases = await new Request(apiUrlNewCases).loadJSON()
-        cases = dataCases.features[0].attributes.value
-    } catch(e) { console.warn(e) }
-
-    try {
-        // AREA DATA
-        const location = await getLocation(useStaticCoordsIndex)
-        let data = await new Request(apiUrl(location)).loadJSON()
-        const attr = data.features[0].attributes
-
-        // STATES DATA
-        let dataStates = await new Request(apiUrlStates).loadJSON()
-        const allStatesData = dataStates.features.map((f) => { return {
-            BL: BUNDESLAENDER_SHORT[f.attributes.LAN_ew_GEN],
-            incidence: f.attributes.cases7_bl_per_100k,
-            cases: f.attributes.Fallzahl
-        }})
-        const statesData = getStateData(allStatesData, BUNDESLAENDER_SHORT[attr.BL])
-        const averageIncidence = allStatesData.reduce((a, b) => a + b.incidence, 0) / allStatesData.length
-
-        // FORMATTED DATA
-        const res = {
-            area: {
-                incidence: parseFloat(attr.cases7_per_100k.toFixed(1)),
-                name: attr.GEN,
-                dailyCases: -1,
-                areaCases: parseFloat(attr.cases.toFixed(1)),
-                areaIBZ: attr.IBZ
-            },
-            state: {
-                incidence: parseFloat(statesData.incidence.toFixed(1)),
-                name: BUNDESLAENDER_SHORT[attr.BL],
-                cases: statesData.cases,
-                dailyCases: -1
-            },
-            d: {
-                incidence: parseFloat(averageIncidence.toFixed(1)),
-                dailyCases: cases,
-                r: rValue
-            },
-            updated: attr.last_update,
-            updatedTS: getTimestamp(attr.last_update),
-            rs: attr.RS,
-        }
-        const preparedDataResponse = await prepareData(attr.RS, attr.GEN, res)
-        if (preparedDataResponse.status === 200) saveData(attr.RS, preparedDataResponse.data)
-        return preparedDataResponse
-    } catch (e) {
-        console.warn(e)
-        if (typeof staticCoordinates[useStaticCoordsIndex] !== 'undefined' && staticCoordinates[useStaticCoordsIndex].cacheId) {
-            console.warn('Begin loading from cache...' + staticCoordinates[useStaticCoordsIndex].cacheId)
-            const loadedData = await loadData(staticCoordinates[useStaticCoordsIndex].cacheId)
-            return new DataResponse(loadedData.data, 418)
-        } else {
-            console.warn('No cache id in "WidgetParameter" found. See readme.')
-        }
-    }
-    return new DataResponse({}, 404)
-}
-
-async function prepareData(dataId, oldAreaName, newData) {
-    await migrateDataFiles(dataId, oldAreaName)
-    const dataResponse = await loadData(dataId)
-    let data = {}
-    if (dataResponse.status === 200) {
-        const migratedData = migrateData(dataResponse.data)
-        if (Object.keys(migratedData).length > 0) {
-            data = migratedData;
-        } else {
-            data = dataResponse.data
-        }
-    }
-    data[newData.updated.substr(0, 10)] = newData
-    data = limitData(data)
-    data = populateDailyCases(data);
-    return new DataResponse(data)
-}
-
-function populateDailyCases(data) {
-    const keys = Object.keys(data).reverse()
-    keys.forEach((key) => {
-        let yesterday = new Date(data[key].updatedTS - (60 * 60 * 24) * 1000)
-        let yesterdayKey = `${(''+yesterday.getDate()).padStart(2, '0')}.${(''+(yesterday.getMonth() + 1)).padStart(2, '0')}.${yesterday.getFullYear()}`
-        if (typeof data[yesterdayKey] !== 'undefined') {
-            data[key].area.dailyCases = data[key].area.areaCases - data[yesterdayKey].area.areaCases
-            data[key].state.dailyCases = data[key].state.cases - data[yesterdayKey].state.cases
-        } else {
-            if (data[key].area.dailyCases === null) data[key].area.dailyCases = -1
-            if (data[key].state.dailyCases === null) data[key].state.dailyCases = -1
-        }
-    });
-    return data
-}
-
-function limitData(data) {
-    const dataKeys = Object.keys(data);
-    const lastKeys = dataKeys.slice(Math.max(dataKeys.length - CONFIG_MAX_CACHED_DAYS, 0))
-    let dataLimited = {}
-    lastKeys.forEach(key => {
-        dataLimited[key] = data[key]
-    })
-    return dataLimited
-}
-
-function migrateData(loggedData) {
-    let migratedData = {}
-    Object.keys(loggedData).forEach((key, index) => {
-        // CHECK FOR OLD FORMAT
-        if (typeof loggedData[key].incidence !== 'undefined') {
-            const stateData = getStateData(loggedData[key].incidencePerState, loggedData[key].nameBL)
-            migratedData[key] = {
-                area: {
-                    incidence: loggedData[key].incidence,
-                    name: loggedData[key].areaName,
-                    dailyCases: -1,
-                    areaCases: loggedData[key].areaCases,
-                },
-                state: {
-                    incidence: loggedData[key].incidenceBL,
-                    name: loggedData[key].nameBL,
-                    cases: stateData.cases,
-                    dailyCases: -1
-                },
-                d: {
-                    incidence: loggedData[key].averageIncidence,
-                    dailyCases: loggedData[key].cases,
-                    r: loggedData[key].r
-                },
-                updated: loggedData[key].updated,
-                updatedTS: getTimestamp(loggedData[key].updated),
-                rs: loggedData[key].RS,
-            }
-        }
-    })
-    return migratedData
-}
-
-function getTimestamp(dateStr) {
-    const regex = /([\d]+)\.([\d]+)\.([\d]+),\ ([0-2]?[0-9]):([0-5][0-9])/g;
-    let m = regex.exec(dateStr)
-    return new Date(m[3], m[2]-1, m[1], m[4], m[5]).getTime()
-}
-
-function getStateData (incidencePerState, nameBL) {
-    return incidencePerState.filter(item => {
-        return item.BL === nameBL
-    }).pop()
-}
-
-async function getRValue() {
-    const rDataStr = await new Request(apiRUrl).loadString()
-    const rData = parseRCSV(rDataStr) 
-    let lastR = 0
-    if (rData.length === 0) return lastR
-    let availeRvalueField
-    Object.keys(rData[0]).forEach(key => {
-        CONFIG_CSV_RVALUE_FIELDS.forEach(possibleRKey => {
-            if (key === possibleRKey) availeRvalueField = possibleRKey;
-        })
-    });
-    let firstDatefield = Object.keys(rData[0])[0];
-    if (availeRvalueField) {
-        rData.forEach(item => {
-            if (item[firstDatefield].includes('.') && typeof item[availeRvalueField] !== 'undefined' && parseFloat(item[availeRvalueField].replace(',','.')) > 0) {
-                lastR = item;
-            }
-        })
-    }
-    return (lastR) ? parseFloat(lastR[availeRvalueField].replace(',','.')) : lastR
-}
-
-function getIncidenceColor(incidence) {
-    let color = LIMIT_GREEN_COLOR
-    if (incidence > LIMIT_DARKDARKRED) {
-        color = LIMIT_DARKDARKRED_COLOR
-    } else if (incidence >= LIMIT_DARKRED) {
-        color = LIMIT_DARKRED_COLOR
-    } else if (incidence >= LIMIT_RED) {
-        color = LIMIT_RED_COLOR
-    } else if (incidence >= LIMIT_ORANGE) {
-        color = LIMIT_ORANGE_COLOR
-    } else if (incidence >= LIMIT_YELLOW) {
-        color = LIMIT_YELLOW_COLOR
-    } else if (incidence === 0) {
-        color = LIMIT_GRAY_COLOR
-    }
-    return color
-}
-
-function parseInput (input) {
-    const _coords = []
-    const _staticCoordinates = input.split(";").map(coords => {
-        return coords.split(',')
-    })
-    _staticCoordinates.forEach(coords => {
-        _coords[parseInt(coords[0])] = {
-            index: parseInt(coords[0]),
-            latitude: parseFloat(coords[1]),
-            longitude: parseFloat(coords[2]),
-            name: (coords[3]) ? coords[3] : false,
-            cacheId: (coords[4]) ? coords[4] : false
-        }
-    })
-    return _coords
-}
-
-function getDataForDate(data, dayOffset = 0) {
-    const dateKeys = Object.keys(data)
-    const dateKey = dateKeys[dateKeys.length - 1 - dayOffset]
-    return  (typeof data[dateKey] !== 'undefined') ? data[dateKey] : false;
-}
-
-function saveData(dataId, newData) {
-    let path = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    fm.writeString(path, JSON.stringify(newData))
-}
-
-function migrateDataFiles(dataId, oldAreaName) {
-    if (!fm.isDirectory(fmConfigDirectory)) fm.createDirectory(fmConfigDirectory)
-    let configPath = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    let oldConfigPaths = [
-        fm.joinPath(fm.documentsDirectory(), 'covid19' + oldAreaName + '.json'),
-        fm.joinPath(fm.documentsDirectory(), 'coronaWidget' + dataId + '.json')
-    ]
-    oldConfigPaths.forEach(oldPath => {
-        if (fm.isFileStoredIniCloud(oldPath) && !fm.isFileDownloaded(oldPath)) fm.downloadFileFromiCloud(oldPath)
-        if (fm.fileExists(oldPath) && !fm.fileExists(configPath)) try { fm.move(oldPath, configPath) } catch(e) { console.warn(e) }
-        // if (fm.fileExists(oldPath)) try { fm.remove(oldPath) } catch(e) { console.warn(e) }
-    })
-}
-
-async function loadData(dataId) {
-    let path = fm.joinPath(fmConfigDirectory, 'coronaWidget' + dataId + '.json')
-    if (fm.isFileStoredIniCloud(path) && !fm.isFileDownloaded(path)) {
-        await fm.downloadFileFromiCloud(path)
-    }
-    if (fm.fileExists(path)) {
+    async selfUpdate() {
+        if (!ENV.script.selfUpdate) return
+        Helper.log('script selfUpdate', 'running')
+        let url = 'https://raw.githubusercontent.com/rphl/corona-widget/master/incidence.js';
+        let request = new Request(url)
+        let filenameBak = ENV.script.filename.replace('.js', '.bak.js')
         try {
-            return new DataResponse(JSON.parse(fm.readString(path)))
-         } catch (e) {
-             return new DataResponse(null, 500)
-         }
+            let script = await request.loadString()
+            if (script !== '') {
+                if (cfm.fm.fileExists(filenameBak)) await cfm.fm.remove(filenameBak)
+                cfm.copy(ENV.script.filename, filenameBak)
+                cfm.save(script, ENV.script.filename)
+                ENV.script.updateStatus = 'updated'
+                Helper.log('script selfUpdate', ENV.script.updateStatus);
+            }
+        } catch (e) {
+            console.warn(e)
+            if (cfm.fm.fileExists(filenameBak)) {
+                // await cfm.fm.copy(filenameBak, ENV.script.filename)
+                // await cfm.fm.remove(filenameBak)
+                ENV.script.updateStatus = 'loading failed, rollback?'
+                Helper.log('script selfUpdate', ENV.script.updateStatus);
+            }
+        }
     }
-    return new DataResponse(null, 404)
 }
 
-function parseRCSV(rDataStr) {
-    let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function(el) {return el.length != 0})
-    let headers = lines.splice(0, 1)[0].split(";");
-    let valuesRegExp = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\")|([^\";]+)/g;
-    let elements = []
-    for (let i = 0; i < lines.length; i++) {
-        let element = {};
-        let j = 0;
-        let values = lines[i].split(';')
-        element = values.reduce(function(result, field, index) {
-            result[headers[index]] = field;
-            return result;
-          }, {})
-        elements.push(element)
-    }
-    return elements
-}
+class UIComp {
+    static incidenceRows(view) {
+        let b = new UI(view).stack('v', [4, 6, 4, 6])
+        let bb = new UI(b).stack('v', false, '#99999920', 10)
+        let padding = [4, 6, 4, 4]
+        if (ENV.isMediumWidget) {
+            padding = [2, 8, 2, 8]
+        }
+        let bb2 = new UI(bb).stack('h', padding, '#99999920', 10)
+        UIComp.incidenceRow(bb2, 0)
 
-function LOG(...data) {
-    console.log(data.map(JSON.stringify).join(' | '))
+        let bb3 = new UI(bb).stack('h', padding)
+        if (ENV.isMediumWidget) {
+            UIComp.incidenceRow(bb3, 1)
+        } else {
+            bb3.space()
+            UIComp.areaIcon(bb3, 40)
+            bb3.space(3)
+            bb3.text(ENV.cache[0].meta.GEN.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
+            bb3.space(8) // center title if small widget
+            bb3.space()
+        }
+    }
+    static incidenceRow(view, cacheID) {
+        let b = new UI(view).stack()
+        let incidence = ENV.cache[cacheID].getDay().incidence
+        b.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.xlarge, ENV.incidenceColors.darkred.color, 1, 0.9)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        b.text(trendArrow, Font.boldSystemFont(26), trendColor, 1, 0.9)
+
+        if (ENV.isMediumWidget) {
+            b.space(5)
+            UIComp.areaIcon(b, ENV.cache[cacheID].meta.IBZ)
+            b.space(3)
+            let areaName = ENV.cache[cacheID].meta.GEN
+            if (typeof ENV.staticCoordinates[cacheID] !== 'undefined' && ENV.staticCoordinates[cacheID].name !== false) {
+                areaName = ENV.staticCoordinates[cacheID].name
+            }
+            b.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 1)
+        }
+
+        let b2 = new UI(b).stack('v', [2, 0, 0, 0])
+        //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
+        let bb1 = new UI(b2).stack('h', [0, 0, 0, 0])
+        if (incidence >= 100) bb1.space()
+
+        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 16, false).getImage()
+        bb1.image(graphImg)
+        bb1.space(0)
+
+        let bb2 = new UI(b2).stack('h')
+        bb2.space()
+        bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#888', 1, 1)
+        bb2.space(0)
+
+        b.space(0)
+    }
+    static smallIncidenceBlock(view, cacheID, options = {}) {
+        let b = new UI(view).stack('v', false, '#99999915', 12)
+        let b2 = new UI(b).stack('h', [4, 0, 0, 5])
+        b2.space()
+        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.small2, ENV.incidenceColors.darkred.color, 1, 1)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        b2.text(trendArrow, ENV.fonts.small2, trendColor, 1, 1)
+        let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
+        b2.text(name.toUpperCase(), ENV.fonts.small2, '#777', 1, 1)
+
+        let b3 = new UI(b).stack('h', [0, 0, 0, 5])
+        b3.space()
+        //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
+        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 8, false).getImage()
+        b3.image(graphImg, 0.9)
+
+        let b4 = new UI(b).stack('h', [0, 0, 1, 5])
+        b4.space()
+        b4.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#777', 1, 0.9)
+        // b4.text('↗', ENV.fonts.xsmall, '#777', 1, 0.9)
+        b.space(2)
+    }
+    static smallIncidenceRow(view, cacheID, options = {}) {
+        let borderWidth = (typeof options.borderWidth !== 'undefined') ? options.borderWidth : 1
+        let r = new UI(view).stack('h', false, '#99999910', 12, borderWidth)
+        let b = new UI(r).stack('v')
+
+        let b2 = new UI(b).stack('h', [2, 0, 0, 6])
+        b2.space()
+        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, ENV.incidenceColors.darkred.color)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        b2.text(trendArrow, ENV.fonts.normal, trendColor)
+        b2.space(2)
+        let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
+        b2.text(name.toUpperCase(), ENV.fonts.normal, false)
+
+        let b3 = new UI(b).stack('h', [0, 0, 2, 6])
+        b3.space()
+        b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#999', 1, 0.9)
+        //b3.text('↗', ENV.fonts.xsmall, '#999', 1, 0.9)
+
+        let b4 = new UI(r).stack('h', [0, 0, 0, 6])
+        b4.space(2)
+        //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
+        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 56, 10, false).getImage()
+        b4.image(graphImg, 0.9)
+
+        r.space(4)
+    }
+    static areaIcon(view, ibzID) {
+        let b = new UI(view).stack('h', [1, 3, 1, 3], '#99999930', 2, 2)
+        b.text(ENV.areaIBZ[ibzID], ENV.fonts.xsmall)
+    }
+    static statusBlock(view, status) {
+        let icon
+        let iconText
+        switch (status) {
+            case ENV.status.offline:
+                icon = '⚡️'
+                iconText = 'Offline'
+                break;
+            case ENV.status.nogps:
+                icon = '🌍'
+                iconText = 'Kein GPS'
+                break;
+        }
+        if (icon && iconText) {
+            let topStatusStack = new UI(view).stack('v')
+            topStatusStack.text(icon, ENV.fonts.small)
+            topStatusStack.text(iconText, ENV.fonts.xsmall, '#999999')
+        }
+    }
+}
+class UI {
+    constructor(view) {
+        if (view instanceof UI) {
+            this.view = this.elem = view.elem
+        } else {
+            this.view = this.elem = view
+        }
+    }
+    static generateGraph(data, width, height, alignLeft = true) {
+        let graphData = data.slice(Math.max(data.length - CFG.graphShowDays, 1));
+        let context = new DrawContext()
+        context.size = new Size(width, height)
+        context.opaque = false
+        let max = Math.max.apply(Math, graphData.map(function (o) { return o.cases; }))
+        max = (max <= 0) ? 10 : max;
+        let w = Math.max(2, Math.round((width - (graphData.length * 2)) / graphData.length))
+        let xOffset = (!alignLeft) ? (width - (graphData.length * (w + 1))) : 0
+        for(let i = 0; i < CFG.graphShowDays; i++) {
+            let item = graphData[i]
+            let value = parseFloat(item.cases)
+            if (value === -1 && i == 0) value = 10;
+            let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
+            let x = xOffset + (w + 1) * i
+            let rect = new Rect(x, height - h, w, h)
+            context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
+            context.fillRect(rect)
+        }
+        return context
+    }
+    stack(type = 'h', padding = false, borderBgColor = false, radius = false, borderWidth = false) {
+        this.elem = this.view.addStack()
+        if (radius) this.elem.cornerRadius = radius
+        if (borderWidth !== false) {
+            this.elem.borderWidth = borderWidth
+            this.elem.borderColor = new Color(borderBgColor)
+        } else if (borderBgColor) {
+            this.elem.backgroundColor = new Color(borderBgColor)
+        }
+        if (padding) this.elem.setPadding(...padding)
+        if (type === 'h') { this.elem.layoutHorizontally() } else { this.elem.layoutVertically() }
+        this.elem.centerAlignContent()
+        return this
+    }
+    text(text, font = false, color = false, maxLines = 0, minScale = 0.75) {
+        let t = this.elem.addText(text)
+        if (color) t.textColor = (typeof color === 'string') ? new Color(color) : color
+        t.font = (font) ? font : ENV.fonts.normal
+        t.lineLimit = (maxLines > 0 && minScale < 1) ? maxLines + 1 : maxLines
+        t.minimumScaleFactor = minScale
+        return this
+    }
+    image(image, imageOpacity = 1.0) {
+        let i = this.elem.addImage(image)
+        i.resizable = false
+        i.imageOpacity = imageOpacity
+    }
+    space(size) {
+        this.elem.addSpacer(size)
+        return this
+    }
+    static getTrendUpArrow(now, prev) {
+        if (now < 0 && prev < 0) {
+            now = Math.abs(now)
+            prev = Math.abs(prev)
+        }
+        return (now < prev) ? '↗' : (now > prev) ? '↑' : '→'
+    }
+    static getTrendArrow(value1, value2) {
+        return (value1 < value2) ? '↓' : (value1 > value2) ? '↑' : '→'
+    }
+    static getIncidenceColor(incidence) {
+        let color = ENV.incidenceColors.green.color
+        if (incidence > ENV.incidenceColors.darkdarkred.limit) {
+            color = ENV.incidenceColors.darkdarkred.color
+        } else if (incidence >= ENV.incidenceColors.darkred.limit) {
+            color = ENV.incidenceColors.darkred.color
+        } else if (incidence >= ENV.incidenceColors.red.limit) {
+            color = ENV.incidenceColors.red.color
+        } else if (incidence >= ENV.incidenceColors.orange.limit) {
+            color = ENV.incidenceColors.orange.color
+        } else if (incidence >= ENV.incidenceColors.yellow.limit) {
+            color = ENV.incidenceColors.yellow.color
+        } else if (incidence === 0) {
+            color = ENV.incidenceColors.gray.color
+        }
+        return color
+    }
 }
 
 class DataResponse {
-    constructor(data, status = 200) {
+    constructor(data, status = ENV.status.ok) {
         this.data = data
         this.status = status
     }
 }
 
-function getFilemanager() {
-    try {
-        fm = FileManager.iCloud()
-    } catch (e) {
-        fm = FileManager.local()
+class CustomFilemanager {
+    constructor() {
+        try {
+            this.fm = FileManager.iCloud()
+            this.fm.documentsDirectory()
+        } catch (e) {
+            this.fm = FileManager.local()
+        }
+        this.configDirectory = 'coronaWidgetNext'
+        this.configPath = this.fm.joinPath(this.fm.documentsDirectory(), '/' + this.configDirectory)
+        if (!this.fm.isDirectory(this.configPath)) this.fm.createDirectory(this.configPath)
     }
-    // check if user logged in iCloud
-    try { 
-        fm.documentsDirectory()
-    } catch(e) {
-        fm = FileManager.local()
+    async copy(oldFilename, newFilename) {
+        let oldPath = this.fm.joinPath(this.configPath, oldFilename);
+        let newPath = this.fm.joinPath(this.configPath, newFilename);
+        this.fm.copy(oldPath, newPath)
     }
-    return fm
+    async save(data, filename = '') {
+        let path
+        let dataStr
+        if (filename === '') {
+            path = this.fm.joinPath(this.configPath, 'coronaWidget_' + data.dataId + '.json');
+            dataStr = JSON.stringify(data);
+        } else {
+            path = this.fm.joinPath(this.fm.documentsDirectory(), filename);
+            dataStr = data;
+        }
+        this.fm.writeString(path, dataStr);
+    }
+    async read(filename) {
+        let path = this.fm.joinPath(this.configPath, filename + '.json');
+        let type = 'json'
+        if (filename.includes('.')) {
+            path = this.fm.joinPath(this.fm.documentsDirectory(), filename);
+            type = 'string'
+        }
+        if (this.fm.isFileStoredIniCloud(path) && !this.fm.isFileDownloaded(path)) await this.fm.downloadFileFromiCloud(path);
+        if (this.fm.fileExists(path)) {
+            try {
+                let resStr = await this.fm.readString(path)
+                let res = (type === 'json') ? JSON.parse(resStr) : resStr
+                return new DataResponse(res);
+            } catch (e) {
+                console.error(e)
+                return new DataResponse('', ENV.status.error);
+            }
+        }
+        return new DataResponse('', ENV.status.notfound);
+    }
 }
 
+class Data {
+    constructor(dataId, data = {}, meta = {}) {
+        this.dataId = dataId
+        this.data = data
+        this.meta = meta
+    }
+    getDay(dayOffset = 0) {
+        return (typeof this.data[this.data.length - 1 - dayOffset] !== 'undefined') ? this.data[this.data.length - 1 - dayOffset] : false;
+    }
+    static async tryLoadFromCache(cacheID, useStaticCoordsIndex) {
+        const dataResponse = await cfm.read(cfm.configDirectory + '/coronaWidget_config.json')
+        if (dataResponse.status !== ENV.status.ok) return ENV.status.error
+        const cacheIDs = JSON.parse(dataResponse.data)
+        if (typeof cacheIDs[cacheID] === 'undefined') return ENV.status.error
+        const dataIds = cacheIDs[cacheID]
+        if (typeof dataIds['dataIndex' + useStaticCoordsIndex] !== 'undefined') {
+            const areaData = await cfm.read('coronaWidget_' + dataIds['dataIndex' + useStaticCoordsIndex])
+            const area = new Data(dataIds['dataIndex' + useStaticCoordsIndex], areaData.data.data, areaData.data.meta)
+            ENV.cache[useStaticCoordsIndex] = area
+
+            const stateData = await cfm.read('coronaWidget_' + areaData.data.meta.BL_ID)
+            const state = new Data(areaData.data.meta.BL_ID, stateData.data.data, stateData.data.meta)
+            ENV.cache[areaData.data.meta.BL_ID] = state
+
+            const dData =  await cfm.read('coronaWidget_d')
+            const d = new Data(areaData.data.meta.BL_ID, dData.data.data, dData.data.meta)
+            ENV.cache.d = d
+
+            return ENV.status.ok
+        }
+        return ENV.status.error
+    }
+    static async load(useStaticCoordsIndex = false) {
+        if (typeof ENV.cache[useStaticCoordsIndex] !== 'undefined') return true
+
+        let configId = btoa('cID' + JSON.stringify(ENV.staticCoordinates).replace(/[^a-zA-Z ]/g, ""))
+        const location = await Helper.getLocation(useStaticCoordsIndex)
+        if (!location) {
+            return (await Data.tryLoadFromCache(configId, useStaticCoordsIndex) === ENV.status.ok) ? ENV.status.nogps : ENV.status.error
+        }
+        const locationData = await rkiRequest.locationData(location)
+        if (!locationData) {
+            return (await Data.tryLoadFromCache(configId, useStaticCoordsIndex) === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+        }
+
+        let areaCases = await rkiRequest.areaCases(locationData.RS)
+        await Data.geoCache(configId, useStaticCoordsIndex, locationData.RS)
+
+        let areaData = new Data(locationData.RS)
+        areaData.data = areaCases
+        areaData.meta = locationData
+        await cfm.save(areaData)
+        ENV.cache[useStaticCoordsIndex] = areaData
+
+        // STATE DATA
+        if (typeof ENV.cache[locationData.BL_ID] === 'undefined') {
+            let stateCases = await rkiRequest.stateCases(locationData.BL_ID)
+            let stateData = new Data(locationData.BL_ID)
+            stateData.data = stateCases
+            stateData.meta = {
+                BL_ID: locationData.BL_ID,
+                BL: locationData.BL,
+                EWZ: locationData.EWZ_BL
+            }
+            await cfm.save(stateData)
+            ENV.cache[locationData.BL_ID] = stateData
+        }
+
+        // GER DATA
+        if (typeof ENV.cache.d === 'undefined') {
+            let dCases = await rkiRequest.dCases()
+            let dData = new Data('d')
+            dData.data = dCases
+            dData.meta = {
+                r: await rkiRequest.rvalue(),
+                EWZ: 83.02 * 1000000 // @TODO real number?
+            }
+            await cfm.save(dData)
+            ENV.cache.d = dData
+        }
+
+        if (typeof ENV.cache[useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
+            return ENV.status.ok
+        }
+        return ENV.status.error
+    }
+    static async geoCache(configId, dataIndex, rsid) {
+        let data = {}
+        let dataResponse = await cfm.read(cfm.configDirectory + '/coronaWidget_config.json')
+        if (dataResponse.status === ENV.status.ok) data = JSON.parse(dataResponse.data)
+        if (typeof data[configId] === 'undefined') data[configId] = {}
+        data[configId]['dataIndex' + dataIndex] = rsid
+        await cfm.save(JSON.stringify(data), cfm.configDirectory + '/coronaWidget_config.json')
+    }
+}
+
+class Format {
+    static dateStr(timestamp) {
+        let date = new Date(timestamp)
+        return `${('' + date.getDate()).padStart(2, '0')}.${('' + (date.getMonth() + 1)).padStart(2, '0')}.${date.getFullYear()}`
+    }
+    static number(number, fractionDigits = 0, placeholder = null, limit = false) {
+        if (!!placeholder && number === 0) return placeholder
+        if (limit !== false && number >= limit) fractionDigits = 0
+        return Number(number).toLocaleString('de-DE', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits })
+    }
+    static timestamp(dateStr) {
+        const regex = /([\d]+)\.([\d]+)\.([\d]+),\ ([0-2]?[0-9]):([0-5][0-9])/g;
+        let m = regex.exec(dateStr)
+        return new Date(m[3], m[2] - 1, m[1], m[4], m[5]).getTime()
+    }
+    static rValue(data) {
+        const parsedData = Parse.rCSV(data)
+        let r = 0
+        if (parsedData.length === 0) return r
+        let availeRvalueField
+        Object.keys(parsedData[0]).forEach(key => {
+            CFG.csvRvalueFields.forEach(possibleRKey => {
+                if (key === possibleRKey) availeRvalueField = possibleRKey;
+            })
+        });
+        let firstDatefield = Object.keys(parsedData[0])[0];
+        if (availeRvalueField) {
+            parsedData.forEach(item => {
+                if (item[firstDatefield].includes('.') && typeof item[availeRvalueField] !== 'undefined' && parseFloat(item[availeRvalueField].replace(',', '.')) > 0) {
+                    r = item;
+                }
+            })
+        }
+        return (r) ? parseFloat(r[availeRvalueField].replace(',', '.')) : r
+    }
+}
+
+class RkiRequest {
+    async locationData(location) {
+        const outputFields = 'GEN,RS,EWZ,EWZ_BL,BL_ID,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,IBZ';
+        const url = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
+        const response = await this.exec(url)
+        return (response.status === ENV.status.ok) ? response.data.features[0].attributes : false
+    }
+    async areaCases(areaID) {
+        const apiStartDate = Helper.getDateBefore(CFG.graphShowDays + 7)
+        const newCasesTodayUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)+AND+IdLandkreis=${areaID}&objectIds=&time=&resultType=standard&outFields=&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=MeldeDatum&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D&having=&resultOffset=&resultRecordCount=&sqlFormat=none&token=`
+        const newCasesHistoryUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=NeuerFall+IN%281%2C0%29+AND+IdLandkreis=${areaID}+AND+MeldeDatum+%3E%3D+TIMESTAMP+%27${apiStartDate}%27&objectIds=&time=&resultType=standard&outFields=AnzahlFall%2CMeldeDatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=MeldeDatum&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D%0D%0A&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`
+
+        return await this.getCases(newCasesTodayUrl, newCasesHistoryUrl)
+    }
+    async stateCases(blID) {
+        const apiStartDate = Helper.getDateBefore(CFG.graphShowDays + 7)
+        const newCasesTodayUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)+AND+IdBundesland=${blID}&objectIds=&time=&resultType=standard&outFields=&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=MeldeDatum&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D&having=&resultOffset=&resultRecordCount=&sqlFormat=none&token=`
+        const newCasesHistoryUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=NeuerFall+IN%281%2C0%29+AND+IdBundesland=${blID}+AND+MeldeDatum+%3E%3D+TIMESTAMP+%27${apiStartDate}%27&objectIds=&time=&resultType=standard&outFields=AnzahlFall%2CMeldeDatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=MeldeDatum&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D%0D%0A&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`
+
+        return await this.getCases(newCasesTodayUrl, newCasesHistoryUrl)
+    }
+    async dCases() {
+        const apiStartDate = Helper.getDateBefore(CFG.graphShowDays + 7)
+        let newCasesTodayUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?f=json&where=NeuerFall%20IN(1%2C%20-1)&returnGeometry=false&geometry=42.000%2C12.000&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&outFields=*&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D&resultType=standard&cacheHint=true`
+        newCasesTodayUrl += `&groupByFieldsForStatistics=MeldeDatum`
+        const newCasesHistoryUrl = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_COVID19/FeatureServer/0/query?where=NeuerFall+IN%281%2C0%29+AND+MeldeDatum+%3E%3D+TIMESTAMP+%27${apiStartDate}%27&objectIds=&time=&resultType=standard&outFields=AnzahlFall%2CMeldeDatum&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnDistinctValues=false&cacheHint=false&orderByFields=&groupByFieldsForStatistics=MeldeDatum&outStatistics=%5B%7B%22statisticType%22%3A%22sum%22%2C%22onStatisticField%22%3A%22AnzahlFall%22%2C%22outStatisticFieldName%22%3A%22cases%22%7D%5D%0D%0A&having=&resultOffset=&resultRecordCount=&sqlFormat=none&f=pjson&token=`
+
+        return await this.getCases(newCasesTodayUrl, newCasesHistoryUrl)
+    }
+    async rvalue() {
+        const url = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
+        const response = await this.exec(url, false)
+        return (response.status === ENV.status.ok) ? Format.rValue(response.data) : false
+    }
+    async getCases(urlToday, urlHistory) {
+        const responseToday = await this.exec(urlToday)
+        const responseHistory = await this.exec(urlHistory)
+        if (responseToday.status === ENV.status.ok && responseHistory.status === ENV.status.ok) {
+            let data = responseHistory.data.features.map(day => { return { cases: day.attributes.cases, date: day.attributes.MeldeDatum } })
+            let todayCases = responseToday.data.features.reduce((a, b) => a + b.attributes.cases, 0)
+            let lastDate = Math.max(...responseHistory.data.features.map(a => a.attributes.MeldeDatum))
+            let lastDateToday = Math.max(...responseToday.data.features.map(a => a.attributes.MeldeDatum))
+
+            if (new Date(lastDateToday).setHours(0, 0, 0, 0) <= new Date(lastDate).setHours(0, 0, 0, 0)) {
+                let lastReportDate = new Date(lastDate)
+                lastDate = lastReportDate.setDate(lastReportDate.getDate() + 1);
+            }
+            data.push({ cases: todayCases, date: lastDate })
+            return data;
+        }
+        return false;
+    }
+    async exec(url, isJson = true) {
+        try {
+            const resData = new Request(url)
+            resData.timeoutInterval = 20
+            let data = {}
+            let status = ENV.status.ok
+            if (isJson) {
+                data = await resData.loadJSON()
+                status = (typeof data.features !== 'undefined') ? ENV.status.ok : ENV.status.notfound
+            } else {
+                data = await resData.loadString()
+                status = (typeof data.length !== '') ? ENV.status.ok : ENV.status.notfound
+            }
+            return new DataResponse(data, status)
+        } catch (e) {
+            console.warn(e)
+            return new DataResponse({}, ENV.status.notfound)
+        }
+    }
+}
+
+class Parse {
+    static input(input) {
+        const _coords = []
+        const _staticCoordinates = input.split(";").map(coords => {
+            return coords.split(',')
+        })
+        _staticCoordinates.forEach(coords => {
+            _coords[parseInt(coords[0])] = {
+                index: parseInt(coords[0]),
+                latitude: parseFloat(coords[1]),
+                longitude: parseFloat(coords[2]),
+                name: (coords[3]) ? coords[3] : false
+            }
+        })
+        return _coords
+    }
+    static rCSV(rDataStr) {
+        let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function (el) { return el.length != 0 })
+        let headers = lines.splice(0, 1)[0].split(";");
+        let elements = []
+        for (let i = 0; i < lines.length; i++) {
+            let element = {};
+            let j = 0;
+            let values = lines[i].split(';')
+            element = values.reduce(function (result, field, index) {
+                result[headers[index]] = field;
+                return result;
+            }, {})
+            elements.push(element)
+        }
+        return elements
+    }
+}
+
+class Helper {
+    static calcIncidence(cacheID) {
+        const reversedData = [...ENV.cache[cacheID].data].reverse()
+        for(let i = 0; i < CFG.graphShowDays; i++) {
+            let theDays = reversedData.slice(i + 1, i + 1 + 7) // without today
+            let sumCasesLast7Days = theDays.reduce((a, b) => a + b.cases, 0)
+            reversedData[i].incidence = (sumCasesLast7Days) / (ENV.cache[cacheID].meta.EWZ / 100000)
+        }
+        ENV.cache[cacheID].data = reversedData.reverse()
+    }
+    static getDateBefore(days) {
+        let offsetDate = new Date()
+        offsetDate.setDate(new Date().getDate() - days)
+        return offsetDate.toISOString().split('T').shift()
+    }
+    static async getLocation(staticCoordinateIndex = false) {
+        if (typeof ENV.staticCoordinates[staticCoordinateIndex] !== 'undefined' && Object.keys(ENV.staticCoordinates[staticCoordinateIndex]).length >= 3) {
+            return ENV.staticCoordinates[staticCoordinateIndex]
+        }
+        try {
+            Location.setAccuracyToThreeKilometers()
+            return await Location.current()
+        } catch (e) {
+            console.warn(e)
+        }
+        return null;
+    }
+    static log(...data) {
+        console.log(data.map(JSON.stringify).join(' | '))
+    }
+}
+
+const cfm = new CustomFilemanager()
+const rkiRequest = new RkiRequest()
 await new IncidenceWidget().init()

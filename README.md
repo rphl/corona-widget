@@ -1,8 +1,8 @@
 # Corona Inzidenz Widget für iOS (Scriptable)
 
-Widget zeigt die Inzidenz, tägl. neue Fälle, sowie den Verlauf für 14 Tage an.
+Widget zeigt die Inzidenz, tägl. neue Fälle, sowie den Verlauf für 21 Tage an.
 
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.png)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
 
@@ -10,17 +10,17 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 # Features
 
-* _Inzidenz_ + Trend für Stadt/Kreis, Bundesland
+* _Inzidenz_ + Trend für Stadt/Kreis, Bundesland, Bund
 * _Neue tägl. Fälle_ für Stadt/Kreis, Bundesland, Bund
-* Trend für _Neue tägl. Fälle_ je Stadt/Kreis, Bundesland, Bund
-* 14 Tage Diagram für _Neue tägl. Fälle_ je Stadt/Kreis, Bundesland, Bund
+* 21 Tage Diagram für _Neue tägl. Fälle_ je Stadt/Kreis, Bundesland, Bund
 * 7 Tage Schätzwert für _Reproduktionszahl (R)_
 * iCloud Sync
-* Offlinemodes
+* Automatischer Offlinemodus
 * Dark/Lighmode unterstützung
+* Autoupdate (Siehe Installation/Update)
 * ...
 
-**Hinweis**: Tägl. neue Fälle für Stadt/Bundesland + Trend sind erst nach 1-2 Tagen verfügbar (Caching nötig)
+ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js_
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.png)
 
@@ -31,15 +31,14 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Skripttext kopieren
 * Scriptable öffnen, kopierten Skripttext als neues Scriptablescript einfügen oder altes erstzen.
 
-**Automatisch**
-* Via Kurzbefehle (Shortcuts) App
-* ...andere Option: https://github.com/rphl/corona-widget/issues/24
-* ...andere Option: https://github.com/rphl/corona-widget/issues/6#issuecomment-721099314
+**Update**
+* Das Skript aktualisiert sich im Intervall selbst (Kann via `CFG.selfUpdate: false` abgestellt werden)
+* ...andere Option: https://scriptdu.de/
 
 
 # Konfiguration
 
-* Daten werden unter **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json zwischengespeichert.
+* Daten werden unter **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidgetNext** > *.json zwischengespeichert.
 * Die allgemeine Konfiguration erfolgt mittels **WidgetParameter**:
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/widgetparameter.jpg)
@@ -72,14 +71,3 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
  * Eigener Name z.B "Home" für den ersten Standort: `0,51.1244,6.7353,Home`
  * Eigener Name z.B "Work" für den zweiten Standort: `1,51.1244,6.7353,Work`
 
-
-## Offlinemodus
-
-Falls mal keine Daten abgerufen werden können, kann der Offlinemodus eingerichtet werden. Dafür muss die CacheID gesetzt werden: Format: `{POSITION},{LAT},{LON},{NAME},{CACHEID};{POSITION},{LAT},{LON},{NAME},{CACHEID}` 
-
-Die `{CACHEID}` ist der numerische Teil der JSON Dateien die im Cacheordner zu finden sind: **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidget** > *.json
-
-**Beispiel**: 
-
- * Dateiname = `coronaWidget01511.json `CacheID = `01511`
- * Cache für Düsselforf setzen: `0,51.1244,6.7353,Work,01511`
