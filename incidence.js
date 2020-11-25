@@ -498,6 +498,21 @@ class Data {
     getDay(dayOffset = 0) {
         return (typeof this.data[this.data.length - 1 - dayOffset] !== 'undefined') ? this.data[this.data.length - 1 - dayOffset] : false;
     }
+    static completeHistory (data) {
+        const lastDateHistory = data[data.length - 1].date
+        const completeDataObj = {}
+        for(let i = 0; i <= CFG.graphShowDays + 7; i++) {
+            let lastReportDate = new Date(lastDateHistory)
+            let prevDate = lastReportDate.setDate(lastReportDate.getDate() - i);
+            completeDataObj[Format.dateStr(prevDate)] = { cases: 0, date: prevDate }
+        }
+        data.map((value) => {
+            let curDate = Format.dateStr(value.date)
+            completeDataObj[curDate].cases = value.cases
+        })
+        let completeData = Object.values(completeDataObj)
+        return completeData.reverse();
+    }
     static async tryLoadFromCache(cacheID, useStaticCoordsIndex) {
         const dataResponse = await cfm.read(cfm.configDirectory + '/coronaWidget_config.json')
         if (dataResponse.status !== ENV.status.ok) return ENV.status.error
@@ -670,6 +685,7 @@ class RkiRequest {
                 lastDate = lastReportDate.setDate(lastReportDate.getDate() + 1);
             }
             data.push({ cases: todayCases, date: lastDate })
+            data = Data.completeHistory(data)
             return data;
         }
         return false;
@@ -739,7 +755,7 @@ class Helper {
         }
         // @TODO Workaround use incidence from api
         if (CFG.useFallbackIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
-            reversedData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
+            // reversedData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
         }
         ENV.cache[cacheID].data = reversedData.reverse()
     }
