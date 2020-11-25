@@ -656,11 +656,11 @@ class RkiRequest {
         if (responseToday.status === ENV.status.ok && responseHistory.status === ENV.status.ok) {
             let data = responseHistory.data.features.map(day => { return { cases: day.attributes.cases, date: day.attributes.MeldeDatum } })
             let todayCases = responseToday.data.features.reduce((a, b) => a + b.attributes.cases, 0)
-            let lastDate = Math.max(...responseHistory.data.features.map(a => a.attributes.MeldeDatum))
+            let lastDateHistory = Math.max(...responseHistory.data.features.map(a => a.attributes.MeldeDatum))
             let lastDateToday = Math.max(...responseToday.data.features.map(a => a.attributes.MeldeDatum))
-
-            if (new Date(lastDateToday).setHours(0, 0, 0, 0) <= new Date(lastDate).setHours(0, 0, 0, 0)) {
-                let lastReportDate = new Date(lastDate)
+            let lastDate = lastDateHistory;
+            if (!!lastDateToday || new Date(lastDateToday).setHours(0, 0, 0, 0) <= new Date(lastDateHistory).setHours(0, 0, 0, 0)) {
+                let lastReportDate = new Date(lastDateHistory)
                 lastDate = lastReportDate.setDate(lastReportDate.getDate() + 1);
             }
             data.push({ cases: todayCases, date: lastDate })
@@ -729,7 +729,8 @@ class Helper {
         for(let i = 0; i < CFG.graphShowDays; i++) {
             let theDays = reversedData.slice(i + 1, i + 1 + 7) // without today
             let sumCasesLast7Days = theDays.reduce((a, b) => a + b.cases, 0)
-            reversedData[i].incidence = (sumCasesLast7Days) / (ENV.cache[cacheID].meta.EWZ / 100000)
+            reversedData[i].incidence = (sumCasesLast7Days / ENV.cache[cacheID].meta.EWZ) * 100000
+        }
         // @TODO Workaround use incidence from api
         if (typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
             reversedData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
