@@ -155,7 +155,7 @@ class IncidenceWidget {
 
         if (ENV.isMediumWidget && !ENV.isSameState) {
             topBar.space()
-            UIComp.smallIncidenceRow(topBar, 'd', { borderWidth: 0 })
+            UIComp.smallIncidenceRow(topBar, 'd', '#99999900')
         }
 
         UIComp.incidenceRows(list)
@@ -291,8 +291,8 @@ class UIComp {
         // b4.text('↗', ENV.fonts.xsmall, '#777', 1, 0.9)
         b.space(2)
     }
-    static smallIncidenceRow(view, cacheID) {
-        let r = new UI(view).stack('h', false, '#99999915', 12)
+    static smallIncidenceRow(view, cacheID, bgColor = '#99999915') {
+        let r = new UI(view).stack('h', false, bgColor, 12)
         let b = new UI(r).stack('v')
 
         let b2 = new UI(b).stack('h', [2, 0, 0, 6])
