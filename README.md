@@ -20,7 +20,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Autoupdate (Siehe Installation/Update)
 * ...
 
-ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js_
+_ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js_
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
 
@@ -32,7 +32,7 @@ ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/inc
 * Scriptable öffnen, kopierten Skripttext als neues Scriptablescript einfügen oder altes erstzen.
 
 **Update**
-* Das Skript aktualisiert sich im Intervall selbst (Kann via `CFG.selfUpdate: false` abgestellt werden)
+* Das Skript aktualisiert sich im Intervall selbst (Kann via `CFG.scriptSelfUpdate: false` abgestellt werden)
 * ...andere Option: https://scriptdu.de/
 
 
