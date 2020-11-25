@@ -65,6 +65,7 @@ const ENV = {
         '46': 'K', // Sonderverband offiziel Kreis
         '43': 'LK', // Landkreis
         '45': 'LK', // Sonderverband offiziel Landkreis
+        null: 'BZ',
         '': 'BZ'
     },
     fonts: {
@@ -290,9 +291,8 @@ class UIComp {
         // b4.text('↗', ENV.fonts.xsmall, '#777', 1, 0.9)
         b.space(2)
     }
-    static smallIncidenceRow(view, cacheID, options = {}) {
-        let borderWidth = (typeof options.borderWidth !== 'undefined') ? options.borderWidth : 1
-        let r = new UI(view).stack('h', false, '#99999910', 12, borderWidth)
+    static smallIncidenceRow(view, cacheID) {
+        let r = new UI(view).stack('h', false, '#99999915', 12)
         let b = new UI(r).stack('v')
 
         let b2 = new UI(b).stack('h', [2, 0, 0, 6])
@@ -303,7 +303,7 @@ class UIComp {
         b2.text(trendArrow, ENV.fonts.normal, trendColor)
         b2.space(2)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b2.text(name.toUpperCase(), ENV.fonts.normal, false)
+        b2.text(name.toUpperCase(), ENV.fonts.normal, '#999')
 
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
@@ -320,7 +320,7 @@ class UIComp {
     }
     static areaIcon(view, ibzID) {
         let b = new UI(view).stack('h', [1, 3, 1, 3], '#99999930', 2, 2)
-        b.text(ENV.areaIBZ[ibzID], ENV.fonts.xsmall)
+        b.text(ENV.areaIBZ[ibzID], ENV.fonts.xsmall, false, 1, 1)
     }
     static statusBlock(view, status) {
         let icon
