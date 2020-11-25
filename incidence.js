@@ -255,7 +255,7 @@ class UIComp {
         let b2 = new UI(b).stack('v', [2, 0, 0, 0])
         //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
         let bb1 = new UI(b2).stack('h', [0, 0, 0, 0])
-        if (incidence >= 100) bb1.space()
+        if (ENV.isMediumWidget) bb1.space()
 
         let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 16, false).getImage()
         bb1.image(graphImg)
