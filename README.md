@@ -22,7 +22,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js_
 
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.png)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
 
 # Installation/Update
 
