@@ -188,6 +188,7 @@ class IncidenceWidget {
             if (script !== '') {
                 if (cfm.fm.fileExists(filenameBak)) await cfm.fm.remove(filenameBak)
                 cfm.copy(ENV.script.filename, filenameBak)
+                script = script.replace("scriptSelfUpdate: false", "scriptSelfUpdate: true")
                 cfm.save(script, ENV.script.filename)
                 ENV.script.updateStatus = 'updated'
                 Helper.log('script selfUpdate', ENV.script.updateStatus);
