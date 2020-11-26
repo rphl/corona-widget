@@ -19,7 +19,7 @@ const CFG = {
     csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
     scriptSelfUpdate: false, // script updates itself,
-    useFallbackIncidence: false // in some cacses the location does provide uptodate cases for calculation
+    useFallbackIncidence: true // in some cacses the location does provide uptodate cases for calculation
 }
 
 // ============= ============= ============= ============= =================
