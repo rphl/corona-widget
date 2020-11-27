@@ -235,7 +235,7 @@ class UIComp {
     static incidenceRow(view, cacheID) {
         let b = new UI(view).stack()
         let incidence = ENV.cache[cacheID].getDay().incidence
-        b.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.xlarge, ENV.incidenceColors.darkred.color, 1, 0.9)
+        b.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.xlarge, UI.getIncidenceColor(incidence), 1, 0.9)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b.text(trendArrow, Font.boldSystemFont(26), trendColor, 1, 0.9)
@@ -272,7 +272,8 @@ class UIComp {
         let b = new UI(view).stack('v', false, '#99999915', 12)
         let b2 = new UI(b).stack('h', [4, 0, 0, 5])
         b2.space()
-        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.small2, ENV.incidenceColors.darkred.color, 1, 1)
+        let incidence = ENV.cache[cacheID].getDay().incidence
+        b2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.small2, UI.getIncidenceColor(incidence), 1, 1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b2.text(trendArrow, ENV.fonts.small2, trendColor, 1, 1)
@@ -297,7 +298,8 @@ class UIComp {
 
         let b2 = new UI(b).stack('h', [2, 0, 0, 6])
         b2.space()
-        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, ENV.incidenceColors.darkred.color)
+        let incidence = ENV.cache[cacheID].getDay().incidence
+        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence))
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b2.text(trendArrow, ENV.fonts.normal, trendColor)
