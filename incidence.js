@@ -238,7 +238,7 @@ class UIComp {
     }
     static incidenceRow(view, cacheID) {
         let b = new UI(view).stack('h', [2,0,0,0],)
-        let ib = new UI(b).stack('h', [2,0,0,0], false, false, false, [70, 26])
+        let ib = new UI(b).stack('h', [2,0,0,0], false, false, false, [72, 26])
         ib.elem.bottomAlignContent()
 
         let incidence = ENV.cache[cacheID].getDay().incidence
