@@ -776,7 +776,7 @@ class Helper {
             let theDays = casesData.slice(i + 1, i + 1 + 7) // without today
             let sumCasesLast7Days = theDays.reduce((a, b) => a + b.cases, 0)
             casesData[i].incidence = (sumCasesLast7Days / ENV.cache[cacheID].meta.EWZ) * 100000
-            if (CFG.debugIncidenceCalc) Helper.log(Format.dateStr(casesData[i].date), casesData[i].incidence)
+            if (CFG.debugIncidenceCalc) Helper.log(Format.dateStr(casesData[i].date), casesData[i].cases, casesData[i].incidence)
         }
         // @TODO Workaround use incidence from api
         if (CFG.useFallbackIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
