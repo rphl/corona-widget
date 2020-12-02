@@ -19,7 +19,8 @@ const CFG = {
     csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
     scriptSelfUpdate: false, // script updates itself,
-    useFallbackIncidence: true // in some cacses the location does provide uptodate cases for calculation
+    useFallbackIncidence: false, // in some cacses the location does provide uptodate cases for calculation
+    debugIncidenceCalc: false // show all calculated incidencevalues on console
 }
 
 // ============= ============= ============= ============= =================
@@ -144,9 +145,12 @@ class IncidenceWidget {
         if (statusPos1) Helper.calcIncidence('s1')
         if (statusPos1 && !ENV.isSameState) Helper.calcIncidence(ENV.cache['s1'].meta.BL_ID)
 
-        let topRStack = new UI(topBar).stack('v')
+        let topRStack = new UI(topBar).stack('v', [0,0,0,0])
         topRStack.text(Format.number(ENV.cache.d.meta.r, 2, 'n/v') + 'ᴿ', ENV.fonts.medium)
-        topRStack.text(Format.dateStr(ENV.cache.d.getDay().date), ENV.fonts.xsmall, '#777')
+        let updatedDate = Format.dateStr(ENV.cache.d.getDay().date);
+        let updatedTime = ('' + new Date().getHours()).padStart(2, '0') + ':' + ('' + new Date().getMinutes()).padStart(2, '0')
+        topRStack.text(updatedDate + ' ' +updatedTime, ENV.fonts.xsmall, '#777')
+        
 
         topBar.space()
         UIComp.statusBlock(topBar, statusPos0)
@@ -233,12 +237,20 @@ class UIComp {
         }
     }
     static incidenceRow(view, cacheID) {
-        let b = new UI(view).stack()
+        let b = new UI(view).stack('h', [2,0,0,0],)
+        let ib = new UI(b).stack('h', [2,0,0,0], false, false, false, [70, 26])
+        ib.elem.bottomAlignContent()
+
         let incidence = ENV.cache[cacheID].getDay().incidence
-        b.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.xlarge, UI.getIncidenceColor(incidence), 1, 0.9)
+        let incidenceFormatted = Format.number(incidence, 1, 'n/v', 100)
+        let incidenceParts = incidenceFormatted.split(",")
+        ib.text(incidenceParts[0], Font.boldMonospacedSystemFont(26), UI.getIncidenceColor(incidence), 1, 1)
+        if (typeof incidenceParts[1] !== "undefined") {
+            ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(20), UI.getIncidenceColor(incidence), 1, 1)
+        }
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
-        b.text(trendArrow, Font.boldSystemFont(26), trendColor, 1, 0.9)
+        ib.text(trendArrow, Font.boldRoundedSystemFont(20), trendColor, 1, 0.9)
 
         if (ENV.isMediumWidget) {
             b.space(5)
@@ -252,21 +264,16 @@ class UIComp {
             b.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 1)
         }
 
-        let b2 = new UI(b).stack('v', [2, 0, 0, 0])
-        //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
-        let bb1 = new UI(b2).stack('h', [0, 0, 0, 0])
-        bb1.space()
+        b.space()
 
+        let b2 = new UI(b).stack('v', [2, 0, 0, 0], false, false, false, [58, 30])
         let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 16, false).getImage()
-        bb1.image(graphImg)
-        bb1.space(0)
+        b2.image(graphImg)
 
         let bb2 = new UI(b2).stack('h')
         bb2.space()
         bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#888', 1, 1)
         bb2.space(0)
-
-        b.space(0)
     }
     static smallIncidenceBlock(view, cacheID, options = {}) {
         let b = new UI(view).stack('v', false, '#99999915', 12)
@@ -289,7 +296,6 @@ class UIComp {
         let b4 = new UI(b).stack('h', [0, 0, 1, 5])
         b4.space()
         b4.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#777', 1, 0.9)
-        // b4.text('↗', ENV.fonts.xsmall, '#777', 1, 0.9)
         b.space(2)
     }
     static smallIncidenceRow(view, cacheID, bgColor = '#99999915') {
@@ -299,7 +305,7 @@ class UIComp {
         let b2 = new UI(b).stack('h', [2, 0, 0, 6])
         b2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
-        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence))
+        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b2.text(trendArrow, ENV.fonts.normal, trendColor)
@@ -310,11 +316,9 @@ class UIComp {
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
         b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#999', 1, 0.9)
-        //b3.text('↗', ENV.fonts.xsmall, '#999', 1, 0.9)
 
-        let b4 = new UI(r).stack('h', [0, 0, 0, 6])
+        let b4 = new UI(r).stack('h', [0, 0, 10, 6])
         b4.space(2)
-        //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
         let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 56, 10, false).getImage()
         b4.image(graphImg, 0.9)
 
@@ -333,14 +337,14 @@ class UIComp {
                 iconText = 'Offline'
                 break;
             case ENV.status.nogps:
-                icon = '🌍'
-                iconText = 'Kein GPS'
+                icon = '📡'
+                iconText = 'GPS?'
                 break;
         }
         if (icon && iconText) {
             let topStatusStack = new UI(view).stack('v')
             topStatusStack.text(icon, ENV.fonts.small)
-            topStatusStack.text(iconText, ENV.fonts.xsmall, '#999999')
+            // topStatusStack.text(iconText, ENV.fonts.xsmall, '#999999')
         }
     }
 }
@@ -373,7 +377,7 @@ class UI {
         }
         return context
     }
-    stack(type = 'h', padding = false, borderBgColor = false, radius = false, borderWidth = false) {
+    stack(type = 'h', padding = false, borderBgColor = false, radius = false, borderWidth = false, size = false) {
         this.elem = this.view.addStack()
         if (radius) this.elem.cornerRadius = radius
         if (borderWidth !== false) {
@@ -383,11 +387,12 @@ class UI {
             this.elem.backgroundColor = new Color(borderBgColor)
         }
         if (padding) this.elem.setPadding(...padding)
+        if (size) this.elem.size = new Size(size[0], size[1])
         if (type === 'h') { this.elem.layoutHorizontally() } else { this.elem.layoutVertically() }
         this.elem.centerAlignContent()
         return this
     }
-    text(text, font = false, color = false, maxLines = 0, minScale = 0.75) {
+    text(text, font = false, color = false, maxLines = 0, minScale = 0.9) {
         let t = this.elem.addText(text)
         if (color) t.textColor = (typeof color === 'string') ? new Color(color) : color
         t.font = (font) ? font : ENV.fonts.normal
@@ -748,12 +753,30 @@ class Parse {
 }
 
 class Helper {
+    static getIncidenceLimits(incidence) {
+        if (incidence >= ENV.incidenceColors.green.limit && incidence < ENV.incidenceColors.yellow.limit) {
+            return { min: ENV.incidenceColors.green.limit, max: ENV.incidenceColors.yellow.limit }
+        } else if (incidence >= ENV.incidenceColors.yellow.limit && incidence < ENV.incidenceColors.orange.limit) {
+            return { min: ENV.incidenceColors.red.limit, max: ENV.incidenceColors.darkred.limit }
+        } else if (incidence >= ENV.incidenceColors.orange.limit && incidence < ENV.incidenceColors.red.limit) {
+            return { min: ENV.incidenceColors.red.limit, max: ENV.incidenceColors.darkred.limit }
+        } else if (incidence >= ENV.incidenceColors.red.limit && incidence < ENV.incidenceColors.darkred.limit) {
+            return { min: ENV.incidenceColors.red.limit, max: ENV.incidenceColors.darkred.limit }
+        } else if (incidence >= ENV.incidenceColors.darkred.limit && incidence < ENV.incidenceColors.darkdarkred.limit) {
+            return { min: ENV.incidenceColors.darkred.limit, max: ENV.incidenceColors.darkdarkred.limit }
+        } else if (incidence > ENV.incidenceColors.darkdarkred.limit) {
+            return { min: ENV.incidenceColors.darkdarkred.limit, max: 500 }
+        }
+        return { min: 0, max: 0 }
+    }
     static calcIncidence(cacheID) {
         const casesData = [...ENV.cache[cacheID].data]
+        if (CFG.debugIncidenceCalc) Helper.log('calcIncidence', cacheID)
         for(let i = 0; i < CFG.graphShowDays; i++) {
             let theDays = casesData.slice(i + 1, i + 1 + 7) // without today
             let sumCasesLast7Days = theDays.reduce((a, b) => a + b.cases, 0)
             casesData[i].incidence = (sumCasesLast7Days / ENV.cache[cacheID].meta.EWZ) * 100000
+            if (CFG.debugIncidenceCalc) Helper.log(Format.dateStr(casesData[i].date), casesData[i].incidence)
         }
         // @TODO Workaround use incidence from api
         if (CFG.useFallbackIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
