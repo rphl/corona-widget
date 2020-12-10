@@ -10,19 +10,28 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 # Features
 
-* _Inzidenz_ + Trend für Stadt/Kreis, Bundesland, Bund
-* _Neue tägl. Fälle_ für Stadt/Kreis, Bundesland, Bund
-* 21 Tage Diagram für _Neue tägl. Fälle_ je Stadt/Kreis, Bundesland, Bund
-* 7 Tage Schätzwert für _Reproduktionszahl (R)_
+* **Live Inzidenz** + **Wochentrend!** für Stadt/Kreis, Bundesland, Bund
+* **Neue tägl. Fälle** für Stadt/Kreis, Bundesland, Bund
+* 21 Tage Diagram für **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
+* 7 Tage Schätzwert für **Reproduktionszahl (R)**
 * iCloud Sync
 * Automatischer Offlinemodus
 * Dark/Lighmode unterstützung
 * Autoupdate (Siehe Installation/Update)
 * ...
 
+
 _ALTE ICLOUD VERSION siehe: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js_
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
+
+
+# Quelle/Datenbasis
+
+* Das Widget basiert auf der offziellen Api des RKI. https://npgeo-corona-npgeo-de.hub.arcgis.com/
+* Die bereitgestellten Daten können in bestimmten Regionen auf Grund von Meldeverzögerungen durch Ämter an das RKI (Api) erst Verzögert (Stunden-Tage) im Widget angezeigt werden.
+* Für die Historie werden ausschliesslich Daten aus der Api verwendet. Somit können sich auf Grund von Verzögerunen/Aktualisierungen Werte wie Inzidenzen, neuen Fälle, etc. immer ändern.
+
 
 # Installation/Update
 
@@ -71,3 +80,29 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
  * Eigener Name z.B "Home" für den ersten Standort: `0,51.1244,6.7353,Home`
  * Eigener Name z.B "Work" für den zweiten Standort: `1,51.1244,6.7353,Work`
 
+## Erweiterte Konfiguration
+
+Das Script kann auch direkt über bestimmte Optionen konfiguriert werden. Siehe dazu incidence.js
+
+```
+    // open RKI dashboard on tap, set false to disable
+    openUrl: false, //"https://rki.de", 
+    
+    // show days in graph
+    graphShowDays: 21, 
+
+    // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
+    csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], 
+    
+    // refresh after 1,5 hours (in seconds)
+    scriptRefreshInterval: 5400, 
+    
+    // script updates itself,
+    scriptSelfUpdate: false,
+    
+     // if you like you can show the old static incidence value. is only updated once a day on intial RKI import
+    disableLiveIncidence: false,
+
+     // DEBUG:show all calculated incidencevalues on console
+    debugIncidenceCalc: false
+```

@@ -19,7 +19,7 @@ const CFG = {
     csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
     scriptSelfUpdate: false, // script updates itself,
-    useFallbackIncidence: false, // in some cacses the location does provide uptodate cases for calculation
+    disableLiveIncidence: false, // show old, static incidance. update ONLY ONCE A DAY on intial RKI import
     debugIncidenceCalc: false // show all calculated incidencevalues on console
 }
 
@@ -248,7 +248,7 @@ class UIComp {
         if (typeof incidenceParts[1] !== "undefined") {
             ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(20), UI.getIncidenceColor(incidence), 1, 1)
         }
-        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         ib.text(trendArrow, Font.boldRoundedSystemFont(20), trendColor, 1, 0.9)
 
@@ -281,7 +281,7 @@ class UIComp {
         b2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
         b2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.small2, UI.getIncidenceColor(incidence), 1, 1)
-        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b2.text(trendArrow, ENV.fonts.small2, trendColor, 1, 1)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
@@ -306,7 +306,7 @@ class UIComp {
         b2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
         b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
-        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getDay().incidence, ENV.cache[cacheID].getDay(1).incidence)
+        let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         b2.text(trendArrow, ENV.fonts.normal, trendColor)
         b2.space(2)
@@ -502,8 +502,15 @@ class Data {
         this.data = data
         this.meta = meta
     }
-    getDay(dayOffset = 0) {
+    getDay (dayOffset = 0) {
         return (typeof this.data[this.data.length - 1 - dayOffset] !== 'undefined') ? this.data[this.data.length - 1 - dayOffset] : false;
+    }
+    getAvg (weekOffset = 0, ignoreToday = true) {
+        let casesData = [...this.data].reverse()
+        let skipToday = (ignoreToday) ? 1 : 0;
+        const offsetDays = 7
+        const weekData = casesData.slice((offsetDays * weekOffset) + skipToday, (offsetDays * weekOffset) + 7 + skipToday)
+        return weekData.reduce((a, b) => a + b.incidence, 0) / offsetDays
     }
     static completeHistory (data) {
         const lastDateHistory = data[data.length - 1].date
@@ -779,7 +786,7 @@ class Helper {
             if (CFG.debugIncidenceCalc) Helper.log(Format.dateStr(casesData[i].date), casesData[i].cases, casesData[i].incidence)
         }
         // @TODO Workaround use incidence from api
-        if (CFG.useFallbackIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
+        if (CFG.disableLiveIncidence && typeof ENV.cache[cacheID].meta.cases7_per_100k !== 'undefined') {
             casesData[0].incidence = ENV.cache[cacheID].meta.cases7_per_100k
         }
         ENV.cache[cacheID].data = casesData.reverse()
