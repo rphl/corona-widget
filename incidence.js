@@ -505,7 +505,7 @@ class Data {
     getDay (dayOffset = 0) {
         return (typeof this.data[this.data.length - 1 - dayOffset] !== 'undefined') ? this.data[this.data.length - 1 - dayOffset] : false;
     }
-    getAvg (weekOffset = 0, ignoreToday = true) {
+    getAvg (weekOffset = 0, ignoreToday = false) {
         let casesData = [...this.data].reverse()
         let skipToday = (ignoreToday) ? 1 : 0;
         const offsetDays = 7
