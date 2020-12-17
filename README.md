@@ -12,7 +12,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 * **Live Inzidenz** + **Wochentrend!** für Stadt/Kreis, Bundesland, Bund
 * **Neue tägl. Fälle** für Stadt/Kreis, Bundesland, Bund
-* 21 Tage Diagram für **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
+* 21 Tage Diagram für **Inzidenz** oder **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
 * 7 Tage Schätzwert für **Reproduktionszahl (R)**
 * iCloud Sync
 * Automatischer Offlinemodus
@@ -84,6 +84,9 @@ Das Script kann auch direkt über bestimmte Optionen konfiguriert werden. Siehe 
 ```
     // open RKI dashboard on tap, set false to disable
     openUrl: false, //"https://rki.de", 
+
+    // Show 'i' = incidence OR 'c' = cases in the graph
+    graphShowValues: 'i',
     
     // show days in graph
     graphShowDays: 21, 

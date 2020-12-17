@@ -15,6 +15,7 @@
 
 const CFG = {
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
+    graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
     csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
@@ -239,7 +240,7 @@ class UIComp {
     static incidenceRow(view, cacheID) {
         let b = new UI(view).stack('h', [2,0,0,0],)
         let ib = new UI(b).stack('h', [2,0,0,0], false, false, false, [72, 26])
-        ib.elem.bottomAlignContent()
+        ib.elem.centerAlignContent()
 
         let incidence = ENV.cache[cacheID].getDay().incidence
         let incidenceFormatted = Format.number(incidence, 1, 'n/v', 100)
@@ -267,7 +268,12 @@ class UIComp {
         b.space()
 
         let b2 = new UI(b).stack('v', [2, 0, 0, 0], false, false, false, [58, 30])
-        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 16, false).getImage()
+        let graphImg
+        if (CFG.graphShowValues === 'i') {
+           graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 58, 16, false).getImage()
+        } else {
+           graphImg = UI.generateGraph(ENV.cache[cacheID], 58, 16, false).getImage()
+        }
         b2.image(graphImg)
 
         let bb2 = new UI(b2).stack('h')
@@ -290,7 +296,12 @@ class UIComp {
         let b3 = new UI(b).stack('h', [0, 0, 0, 5])
         b3.space()
         //let chartdata = [{ incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 20, value: 25 }, { incidence: 10, value: 20 }, { incidence: 30, value: 30 }, { incidence: 0, value: 0 }, { incidence: 10, value: 10 }, { incidence: 20, value: 20 }, { incidence: 30, value: 30 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 39, value: 39 }, { incidence: 40, value: 40 }, { incidence: 50, value: 50 }, { incidence: 70, value: 70 }, { incidence: 100, value: 100 }, { incidence: 60, value: 60 }, { incidence: 70, value: 70 }, { incidence: 40, value: 40 }]
-        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 58, 8, false).getImage()
+        let graphImg
+        if (CFG.graphShowValues === 'i') {
+           graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 58, 8, false).getImage()
+        } else {
+           graphImg = UI.generateGraph(ENV.cache[cacheID], 58, 8, false).getImage()
+        }
         b3.image(graphImg, 0.9)
 
         let b4 = new UI(b).stack('h', [0, 0, 1, 5])
@@ -319,7 +330,12 @@ class UIComp {
 
         let b4 = new UI(r).stack('h', [0, 0, 10, 6])
         b4.space(2)
-        let graphImg = UI.generateGraph(ENV.cache[cacheID].data, 56, 10, false).getImage()
+        let graphImg
+        if (CFG.graphShowValues == 'i') {
+          graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 56, 10, false).getImage()
+        } else {
+          graphImg = UI.generateGraph(ENV.cache[cacheID], 56, 10, false).getImage()
+        }
         b4.image(graphImg, 0.9)
 
         r.space(4)
@@ -357,7 +373,7 @@ class UI {
         }
     }
     static generateGraph(data, width, height, alignLeft = true) {
-        let graphData = data.slice(Math.max(data.length - CFG.graphShowDays, 1));
+        let graphData = data.data.slice(Math.max(data.data.length - CFG.graphShowDays, 1));
         let context = new DrawContext()
         context.size = new Size(width, height)
         context.opaque = false
@@ -372,6 +388,28 @@ class UI {
             let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
             let x = xOffset + (w + 1) * i
             let rect = new Rect(x, height - h, w, h)
+            context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
+            context.fillRect(rect)
+        }
+        return context
+    }
+    static generateIcidenceGraph(data, width, height, alignLeft = true) {
+        let graphData = data.data.slice(Math.max(data.data.length - CFG.graphShowDays, 1));
+        let context = new DrawContext()
+        context.size = new Size(width, height)
+        context.opaque = false
+        let max = Math.max.apply(Math, graphData.map(function (o) { return o.incidence; }))
+        let min = Math.min.apply(Math, graphData.map(function (o) { return o.incidence; })) / 1.2
+        max = (max <= 0) ? 10 : max - min;
+        let w = Math.max(2, Math.round((width - (graphData.length * 2)) / graphData.length))
+        let xOffset = (!alignLeft) ? (width - (graphData.length * (w + 1))) : 0
+        for (let i = 0; i < CFG.graphShowDays; i++) {
+            let item = graphData[i]
+            let value = parseFloat(item.incidence) - min
+            if (value === -1 && i == 0) value = 10;
+            let h = Math.max(2, Math.round((Math.abs(value) / max) * (height - 1)))
+            let x = xOffset + (w + 1) * i
+            let rect = new Rect(x, height - h - 1, w, h)
             context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
             context.fillRect(rect)
         }
@@ -418,6 +456,11 @@ class UI {
     }
     static getTrendArrow(value1, value2) {
         return (value1 < value2) ? '↓' : (value1 > value2) ? '↑' : '→'
+    }
+    static getTrendColor(value1, value2, altColorUp = null, altColorDown = null) {
+        let colorUp = (altColorUp) ? new Color(altColorUp) : ENV.incidenceColors.red.color
+        let colorDown = (altColorDown) ? new Color(altColorDown) : ENV.incidenceColors.green.color
+        return (value1 < value2) ? colorDown : (value1 > value2) ? colorUp : ENV.incidenceColors.gray.color
     }
     static getIncidenceColor(incidence) {
         let color = ENV.incidenceColors.green.color
