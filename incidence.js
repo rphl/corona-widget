@@ -332,9 +332,9 @@ class UIComp {
         b4.space(2)
         let graphImg
         if (CFG.graphShowValues == 'i') {
-          graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 56, 10, false).getImage()
+          graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 58, 10, false).getImage()
         } else {
-          graphImg = UI.generateGraph(ENV.cache[cacheID], 56, 10, false).getImage()
+          graphImg = UI.generateGraph(ENV.cache[cacheID], 58, 10, false).getImage()
         }
         b4.image(graphImg, 0.9)
 
