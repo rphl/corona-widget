@@ -377,6 +377,7 @@ class UI {
         let context = new DrawContext()
         context.size = new Size(width, height)
         context.opaque = false
+        context.respectScreenScale = true
         let max = Math.max.apply(Math, graphData.map(function (o) { return o.cases; }))
         max = (max <= 0) ? 10 : max;
         let w = Math.max(2, Math.round((width - (graphData.length * 2)) / graphData.length))
@@ -385,7 +386,7 @@ class UI {
             let item = graphData[i]
             let value = parseFloat(item.cases)
             if (value === -1 && i == 0) value = 10;
-            let h = Math.max(2, Math.round((Math.abs(value) / max) * height))
+            let h = Math.max(2, (Math.abs(value) / max) * height)
             let x = xOffset + (w + 1) * i
             let rect = new Rect(x, height - h, w, h)
             context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
@@ -398,6 +399,7 @@ class UI {
         let context = new DrawContext()
         context.size = new Size(width, height)
         context.opaque = false
+        context.respectScreenScale = true
         let max = Math.max.apply(Math, graphData.map(function (o) { return o.incidence; }))
         let min = Math.min.apply(Math, graphData.map(function (o) { return o.incidence; })) / 1.2
         max = (max <= 0) ? 10 : max - min;
@@ -407,7 +409,7 @@ class UI {
             let item = graphData[i]
             let value = parseFloat(item.incidence) - min
             if (value === -1 && i == 0) value = 10;
-            let h = Math.max(2, Math.round((Math.abs(value) / max) * (height - 1)))
+            let h = Math.max(2,(Math.abs(value) / max) * (height - 1))
             let x = xOffset + (w + 1) * i
             let rect = new Rect(x, height - h - 1, w, h)
             context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
