@@ -1,6 +1,10 @@
 # Corona Inzidenz Widget für iOS (Scriptable)
 
-Widget zeigt die Inzidenz, tägl. neue Fälle, sowie den Verlauf für 21 Tage an.
+Widget zeigt die Inzidenz, tägl. neue Fälle, sowie den Verlauf für 21 Tage (Inzidenz / neue Fälle) an.
+
+```diff
++ SIEHE "FEATURES" ABSCHNITT FÜR AKTUELLE FUNKTIONSWEISE-/UMFANG!
+```
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
 
@@ -38,7 +42,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Scriptable öffnen, kopierten Skripttext als neues Scriptablescript einfügen oder altes erstzen.
 
 **Update**
-* Das Skript aktualisiert sich im Intervall selbst (Kann via `CFG.scriptSelfUpdate: false` abgestellt werden)
+* Wenn `CFG.scriptSelfUpdate: true ` aktualisiert sich das Skript im Intervall selbst (Kann via `CFG.scriptSelfUpdate: false` abgestellt werden)
 * ...andere Option: https://scriptdu.de/
 
 
