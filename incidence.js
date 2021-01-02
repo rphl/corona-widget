@@ -315,9 +315,9 @@ class UIComp {
         b.space()
         b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b.text(name + ": " + ENV.cache.vaccine.states[vaccineStateName].vaccinated, ENV.fonts.medium, false, 1, 0.9)
+        b.text(name + ": " + Format.number(ENV.cache.vaccine.states[vaccineStateName].vaccinated), ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
-        b.text("/ D: " + ENV.cache.vaccine.vaccinated, ENV.fonts.medium, false, 1, 0.9)
+        b.text("/ D: " + Format.number(ENV.cache.vaccine.vaccinated), ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
         Helper.log(ENV.cache[cacheID].lastUpdate)
         let dateTS = new Date(ENV.cache.vaccine.lastUpdate).getTime()
