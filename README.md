@@ -1,12 +1,15 @@
-# Corona Inzidenz Widget für iOS (Scriptable)
+# Corona Inzidenz & Impfquoten Widget für iOS (Scriptable)
 
-Widget zeigt die Inzidenz, tägl. neue Fälle, sowie den Verlauf für 21 Tage (Inzidenz / neue Fälle) an.
+Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inzidenz / neue Fälle) sowie Infos zu den Impfungen.
 
 ```diff
-+ SIEHE "FEATURES" ABSCHNITT FÜR AKTUELLE FUNKTIONSWEISE-/UMFANG!
++ SIEHE "FEATURES" und KONFIGURATIONS ABSCHNITT FÜR AKTUELLE FUNKTIONSWEISE-/UMFANG!
 ```
 
+Inzidenz
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
+Impstoff
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_vaccine.jpg)
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
 
@@ -18,6 +21,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * **Neue tägl. Fälle** für Stadt/Kreis, Bundesland, Bund
 * 21 Tage Diagram für **Inzidenz** oder **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
 * 7 Tage Schätzwert für **Reproduktionszahl (R)**
+* tägl. **Impfquoten-/zahlen** _(Siehe Konfiguration!)_
 * iCloud Sync
 * Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet)
 * Dark/Lighmode unterstützung
@@ -86,6 +90,8 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
 Das Script kann auch direkt über bestimmte Optionen konfiguriert werden. Siehe dazu incidence.js
 
 ```
+    // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showVaccineInMedium: false,
     // open RKI dashboard on tap, set false to disable
     openUrl: false, //"https://rki.de", 
 
