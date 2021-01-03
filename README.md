@@ -89,18 +89,43 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
 
 Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Siehe incidence.js, Änderungen werden bei `scriptSelfUpdate=true` überschrieben)
 
-Persistente Konfiguration kann via externer Konfigurationsdatei angelegt werden: `coronaWidgetNext/config.json`. 
-(Editor für iPhone/iPad: https://apps.apple.com/de/app/kodex/id1038574481)
+* Die dauerhafte Konfiguration wird in einer externen Datei gespeichert.
+* Die Konfigurationsdatei muss selbst angelegt werden: `coronaWidgetNext/config.json`. Diese ist nicht in Scriptable sichtbar!
+* Zum anlegen und bearbeiten kann z.B Kodex https://apps.apple.com/de/app/kodex/id1038574481 für iPhone/iPad verwendet werden.
 
-Vollständige Konfiguration:
+**Optionen:**
+
+* `showVaccineInMedium: false` show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+* `openUrl: false` "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", open RKI URL on tap, set false to disable
+* `graphShowValues: 'i'` 'i' = incidence OR 'c' = cases
+* `graphShowDays: 21` show days in graph
+* `csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes']` try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
+* `scriptRefreshInterval: 5400` refresh after 1,5 hours (in seconds)
+* `scriptSelfUpdate: false` script updates itself,
+* `disableLiveIncidence: false` show old, static incidance. update ONLY ONCE A DAY on intial RKI import
+* `debugIncidenceCalc: false` show all calculated incidencevalues on console
+
+
+**Beispiel** config.json =
+
+RKI Dashboard öffnen
 ```
 {
-    "showVaccineInMedium": false,
-    "openUrl": false,
-    "graphShowValues": "i",
-    "graphShowDays": 21,
-    "scriptRefreshInterval": 5400,
-    "scriptSelfUpdate": false,
-    "disableLiveIncidence": false,
-    "debugIncidenceCalc": false
+    "openUrl": "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
 }
+```
+
+Nur Impquoten anzeigen
+```
+{
+    "showVaccineInMedium": true
+}
+```
+
+... oder
+```
+{
+    "openUrl": "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
+    "showVaccineInMedium": true
+}
+```
