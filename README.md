@@ -7,7 +7,7 @@ Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inziden
 ```
 
 **Inzidenz**
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/develop/screenshots/screenshot.jpg)
 **Inzidenz + Impquoten**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/develop/screenshots/screenshot_vaccine.jpg)
 
