@@ -10,10 +10,17 @@
  * AUTHOR: https://github.com/rphl - https://github.com/rphl/corona-widget/
  * ISSUES: https://github.com/rphl/corona-widget/issues
  * 
- * (Old Version see: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js)
  */
 
-const CFG = {
+// ============= ============= ============= ============= =================
+// ÄNDERUNGEN HIER, WERDEN BEI AKTIVEN AUTOUPDATE ÜBERSCHRIEBEN
+// ZUR KONFIGURATION SIEHE README!
+// https://github.com/rphl/corona-widget#erweiterte-konfiguration
+//
+// ============= ============= ============= ============= =================
+
+let CFG = {
+    showVaccineInMedium: false, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -27,9 +34,6 @@ const CFG = {
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
 // NACHFOLGENDE ZEILEN NUR AUF EIGENE GEFAHR ÄNDERN !!!
-// ============= ============= ============= ============= =================
-// ZUR KONFIGURATION SIEHE README: 
-// https://github.com/rphl/corona-widget/blob/master/README.md
 // ============= ============= ============= ============= =================
 
 const ENV = {
@@ -59,6 +63,24 @@ const ENV = {
         '15': 'ST',
         '1': 'SH',
         '16': 'TH'
+    },
+    vaccineSatesAbbr: {
+        '8' : 'Baden-Württemberg',
+        '9' : 'Bayern',
+        '11' : 'Berlin',
+        '12' : 'Brandenburg',
+        '4' : 'Bremen',
+        '2' : 'Hamburg',
+        '6' : 'Hessen',
+        '13' : 'Mecklenburg-Vorpommern',
+        '3' : 'Niedersachen',
+        '5' : 'Nordrhein-Westfalen',
+        '7' : 'Rheinland-Pfalz',
+        '10' : 'Saarland',
+        '14' : 'Sachsen',
+        '15' : 'Sachsen-Anhalt',
+        '1' : 'Schleswig-Holstein',
+        '16' : 'Thüringen'
     },
     areaIBZ: {
         '40': 'KS',// Kreisfreie Stadt
@@ -102,6 +124,8 @@ class IncidenceWidget {
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
+        if (CFG.showVaccineInMedium) ENV.isMediumWidget = true
+        this.loadConfig();
         this.selfUpdate()
     }
     async init() {
@@ -116,7 +140,9 @@ class IncidenceWidget {
     async createWidget() {
         const list = new ListWidget()
         const statusPos0 = await Data.load(0)
-        const statusPos1 = (ENV.isMediumWidget) ? await Data.load(1) : false
+        const statusPos1 = (ENV.isMediumWidget && typeof ENV.staticCoordinates[1] !== 'undefined') ? await Data.load(1) : false
+
+        Helper.log(statusPos0, statusPos1)
 
         // UI ===============
         let topBar = new UI(list).stack('h', [4, 8, 4, 4])
@@ -157,12 +183,12 @@ class IncidenceWidget {
         UIComp.statusBlock(topBar, statusPos0)
         topBar.space(4)
 
-        if (ENV.isMediumWidget && !ENV.isSameState) {
+        if (ENV.isMediumWidget && !ENV.isSameState && statusPos1) {
             topBar.space()
             UIComp.smallIncidenceRow(topBar, 'd', '#99999900')
         }
 
-        UIComp.incidenceRows(list)
+        UIComp.incidenceVaccineRows(list)
         list.addSpacer(3)
 
         let stateBar = new UI(list).stack('h', [0, 0, 0, 0])
@@ -172,7 +198,7 @@ class IncidenceWidget {
         stateBar.space(4)
 
         // DEFAULT IS GER... else STATE
-        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState) ? ENV.cache['s1'].meta.BL_ID : 'd'
+        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState && statusPos1) ? ENV.cache['s1'].meta.BL_ID : 'd'
         if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, rightCacheID) } else { UIComp.smallIncidenceBlock(stateBar, rightCacheID) }
         stateBar.space(6)
         list.addSpacer(5)
@@ -208,10 +234,17 @@ class IncidenceWidget {
             }
         }
     }
+    async loadConfig () {
+        let path = cfm.fm.joinPath(cfm.configPath, 'config.json');
+        if (cfm.fm.fileExists(path)) {
+            const cfg = await cfm.read('config')
+            if (cfg.status === ENV.status.ok) CFG = Object.assign(CFG, cfg.data)
+        }
+    }
 }
 
 class UIComp {
-    static incidenceRows(view) {
+    static incidenceVaccineRows(view) {
         let b = new UI(view).stack('v', [4, 6, 4, 6])
         let bb = new UI(b).stack('v', false, '#99999920', 10)
         let padding = [4, 6, 4, 4]
@@ -222,9 +255,11 @@ class UIComp {
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
-        if (ENV.isMediumWidget) {
+        if (ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+            UIComp.vaccineRow(bb3, 's0')
+        } else if (ENV.isMediumWidget && typeof ENV.cache.s1 !== 'undefined') {
             UIComp.incidenceRow(bb3, 's1')
-        } else {
+        } else if (!ENV.isMediumWidget) {
             bb3.space()
             UIComp.areaIcon(bb3, ENV.cache['s0'].meta.IBZ)
             bb3.space(3)
@@ -281,6 +316,24 @@ class UIComp {
         bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#888', 1, 1)
         bb2.space(0)
     }
+    static vaccineRow (view, cacheID) {
+        let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
+
+        let b = new UI(view).stack('h', [4,0,4,0],)
+        b.elem.centerAlignContent()
+        b.space()
+        b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
+        let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
+        b.text(name + ": " + Format.number(ENV.cache.vaccine.states[vaccineStateName].vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        b.space(4)
+        b.text("/ D: " + Format.number(ENV.cache.vaccine.vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        b.space(4)
+        let dateTS = new Date(ENV.cache.vaccine.lastUpdate).getTime()
+        let date = Format.dateStr(dateTS)
+        b.text('('+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)
+        b.space()
+        view.space()
+    }
     static smallIncidenceBlock(view, cacheID, options = {}) {
         let b = new UI(view).stack('v', false, '#99999915', 12)
         let b2 = new UI(b).stack('h', [4, 0, 0, 5])
@@ -313,32 +366,48 @@ class UIComp {
         let r = new UI(view).stack('h', false, bgColor, 12)
         let b = new UI(r).stack('v')
 
-        let b2 = new UI(b).stack('h', [2, 0, 0, 6])
-        b2.space()
+        let bb2 = new UI(b).stack('h', [2, 0, 0, 6])
+        bb2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
-        b2.text(Format.number(ENV.cache[cacheID].getDay().incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
+        bb2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
-        b2.text(trendArrow, ENV.fonts.normal, trendColor)
-        b2.space(2)
+        bb2.text(trendArrow, ENV.fonts.normal, trendColor)
+        bb2.space(2)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b2.text(name.toUpperCase(), ENV.fonts.normal, '#999')
+        bb2.text(name.toUpperCase(), ENV.fonts.normal, '#999')
 
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
-        b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#999', 1, 0.9)
+        let b3Text = ' ';
+        if (CFG.showVaccineInMedium && ENV.cache.vaccine) {
+            let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
+            let vaccineQuote
+            if (typeof ENV.cache['vaccine'].states[vaccineStateName] !== 'undefined') {
+                vaccineQuote = ENV.cache['vaccine'].states[vaccineStateName].quote
+            } else {
+                vaccineQuote = ENV.cache['vaccine'].quote
+            }
+            b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
+        }
+        b3.text(b3Text, ENV.fonts.xsmall, '#999', 1, 0.9)
 
-        let b4 = new UI(r).stack('h', [0, 0, 10, 6])
-        b4.space(2)
+        let b2 = new UI(r).stack('v', false, false, false, false, [60, 30])
+        let b2b2 = new UI(b2).stack('h', [0, 0, 0, 6])
+        b2b2.space()
         let graphImg
-        if (CFG.graphShowValues == 'i') {
+        if (CFG.graphShowValues == 'i') {   
           graphImg = UI.generateIcidenceGraph(ENV.cache[cacheID], 58, 10, false).getImage()
         } else {
           graphImg = UI.generateGraph(ENV.cache[cacheID], 58, 10, false).getImage()
         }
-        b4.image(graphImg, 0.9)
+        b2b2.image(graphImg, 0.9)
 
-        r.space(4)
+        let b2b3 = new UI(b2).stack('h', [0, 0, 0, 0])
+        b2b3.space()
+        b2b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#999', 1, 0.9)
+
+        r.space(6)
     }
     static areaIcon(view, ibzID) {
         let b = new UI(view).stack('h', [1, 3, 1, 3], '#99999930', 2, 2)
@@ -555,7 +624,9 @@ class Data {
         let skipToday = (ignoreToday) ? 1 : 0;
         const offsetDays = 7
         const weekData = casesData.slice((offsetDays * weekOffset) + skipToday, (offsetDays * weekOffset) + 7 + skipToday)
-        return weekData.reduce((a, b) => a + b.incidence, 0) / offsetDays
+        const avg = weekData.reduce((a, b) => a + b.incidence, 0) / offsetDays
+        // Helper.log(weekOffset, avg)
+        return avg
     }
     static completeHistory (data) {
         const lastDateHistory = data[data.length - 1].date
@@ -645,6 +716,14 @@ class Data {
             ENV.cache.d = dData
         }
 
+        if (typeof ENV.cache.vaccine === 'undefined') {
+            let vaccineValues = await rkiRequest.vaccinevalues()
+            let vaccineData = new Data('vaccine')
+            vaccineData.data = vaccineValues
+            await cfm.save(vaccineValues)
+            ENV.cache.vaccine = vaccineValues
+        }
+
         if (typeof ENV.cache['s' + useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
             return ENV.status.ok
         }
@@ -730,6 +809,11 @@ class RkiRequest {
         const response = await this.exec(url, false)
         return (response.status === ENV.status.ok) ? Format.rValue(response.data) : false
     }
+    async vaccinevalues () {
+        const url = `https://rki-vaccination-data.vercel.app/api`
+        const response = await this.exec(url)
+        return (response.status === ENV.status.ok) ? response.data : false
+    }
     async getCases(urlToday, urlHistory) {
         const responseToday = await this.exec(urlToday)
         const responseHistory = await this.exec(urlHistory)
@@ -757,11 +841,10 @@ class RkiRequest {
             let status = ENV.status.ok
             if (isJson) {
                 data = await resData.loadJSON()
-                status = (typeof data.features !== 'undefined') ? ENV.status.ok : ENV.status.notfound
             } else {
                 data = await resData.loadString()
-                status = (typeof data.length !== '') ? ENV.status.ok : ENV.status.notfound
             }
+            status = (typeof data.length !== '') ? ENV.status.ok : ENV.status.notfound
             return new DataResponse(data, status)
         } catch (e) {
             console.warn(e)
