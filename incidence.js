@@ -950,28 +950,4 @@ class Helper {
 
 const cfm = new CustomFilemanager()
 const rkiRequest = new RkiRequest()
-const c = [// 
- // { latitude: 50.935173, longitude: 6.953101, name: false },
-     //   { latitude: 48.1351, longitude: 11.5819, name: 'Stadt München' },
-//  { latitude: 48.0782, longitude: 11.6392, name: 'Neubiberg' }
- //   { latitude: 51.233334, longitude: 6.783333, name: false }, // düsseldorf
-//      { latitude: 51.200001, longitude: 6.700000, name: false }, // neuss
-    // { latitude: 49.459, longitude:  8.170, name: 'Bad Dürkheim' },
-    // { latitude: 49.346, longitude: 8.150, name: 'Neustadt' },
-    //{ latitude: 48.5665, longitude: 13.43122, name: false }
- //   { latitude: 53.07516, longitude: 8.80777, name: false } // bremen
-//     { latitude: 53.5953, longitude: 10.7531, name: false }, // hamburg
-    //{ latitude: 53.5060, longitude: 9.9747, name: false } // herzogtum
-//      { latitude: 53.2348, longitude: 7.4752, name: false } // leer
-//     { latitude: 52.396149, longitude: 13.058540, name: false }, // postdam
-    //{ latitude: 52.516783392847024, longitude: 13.498846946642358, name: false } // berlin
-    //{ latitude: 51.233334, longitude: 6.783333, name: false }, // düsseldorf
-    //{ latitude: 51.92, longitude: 8.39, name: false } // gütersloh
-    
-    // { latitude: 50, longitude: 9.074, name: false },
-//   { latitude: 48.917605, longitude: 9.223896, name: false } // Landkreis Ludwigsburg
-//         { latitude: 47.986771, longitude: 10.181319 , name: false }, // ...
-//      { latitude: 50.7524663, longitude: 6.9882839, name: false }, // rhein sieg kreis
-//      { latitude: 50.207597, longitude: 10.067424, name: false } // bad kissingen
-]
-await new IncidenceWidget(c).init()
+await new IncidenceWidget().init()
