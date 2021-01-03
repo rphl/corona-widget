@@ -90,6 +90,7 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
 Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Siehe incidence.js, Änderungen werden bei `scriptSelfUpdate=true` überschrieben)
 
 Persistente Konfiguration kann via externer Konfigurationsdatei angelegt werden: `coronaWidgetNext/config.json`. 
+(Editor für iPhone/iPad: https://apps.apple.com/de/app/kodex/id1038574481)
 
 Vollständige Konfiguration:
 ```
