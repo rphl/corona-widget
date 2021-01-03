@@ -13,7 +13,7 @@
  * (Old Version see: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js)
  */
 
-const CFG = {
+let CFG = {
     showVaccineInMedium: false, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
@@ -121,6 +121,7 @@ class IncidenceWidget {
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
+        this.loadConfig();
         this.selfUpdate()
     }
     async init() {
@@ -240,6 +241,13 @@ class IncidenceWidget {
             }
         }
     }
+    async loadConfig () {
+        let path = cfm.fm.joinPath(cfm.configPath, 'config.json');
+        if (cfm.fm.fileExists(path)) {
+            const cfg = await cfm.read('config')
+            if (cfg.status === ENV.status.ok) CFG = Object.assign(CFG, cfg.data)
+        }
+    }
 }
 
 class UIComp {
@@ -252,8 +260,6 @@ class UIComp {
         }
         let bb2 = new UI(bb).stack('h', padding, '#99999920', 10)
         UIComp.incidenceRow(bb2, 's0')
-
-        Helper.log(ENV.isMediumWidget )
 
         let bb3 = new UI(bb).stack('h', padding)
         if (!ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.vaccine !== 'undefined') {
@@ -318,7 +324,6 @@ class UIComp {
         bb2.space(0)
     }
     static vaccineRow (view, cacheID) {
-        Helper.log(ENV.cache)
         let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
 
         let b = new UI(view).stack('h', [4,0,4,0],)
@@ -330,7 +335,6 @@ class UIComp {
         b.space(4)
         b.text("/ D: " + Format.number(ENV.cache.vaccine.vaccinated), ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
-        Helper.log(ENV.cache[cacheID].lastUpdate)
         let dateTS = new Date(ENV.cache.vaccine.lastUpdate).getTime()
         let date = Format.dateStr(dateTS)
         b.text('('+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)

@@ -87,32 +87,19 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
 
 ## Erweiterte Konfiguration
 
-Das Script kann auch direkt über bestimmte Optionen konfiguriert werden. Siehe dazu incidence.js
+Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Siehe incidence.js, Änderungen werden bei `scriptSelfUpdate=true` überschrieben)
 
+Persistente Konfiguration kann via externer Konfigurationsdatei angelegt werden: `coronaWidgetNext/config.json`. 
+
+Vollständige Konfiguration:
 ```
-    // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
-    showVaccineInMedium: false,
-    // open RKI dashboard on tap, set false to disable
-    openUrl: false, //"https://rki.de", 
-
-    // Show 'i' = incidence OR 'c' = cases in the graph
-    graphShowValues: 'i',
-    
-    // show days in graph
-    graphShowDays: 21, 
-
-    // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
-    csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], 
-    
-    // refresh after 1,5 hours (in seconds)
-    scriptRefreshInterval: 5400, 
-    
-    // script updates itself,
-    scriptSelfUpdate: false,
-    
-     // if you like you can show the old static incidence value. is only updated once a day on intial RKI import
-    disableLiveIncidence: false,
-
-     // DEBUG:show all calculated incidencevalues on console
-    debugIncidenceCalc: false
-```
+{
+    "showVaccineInMedium": false,
+    "openUrl": false,
+    "graphShowValues": "i",
+    "graphShowDays": 21,
+    "scriptRefreshInterval": 5400,
+    "scriptSelfUpdate": false,
+    "disableLiveIncidence": false,
+    "debugIncidenceCalc": false
+}
