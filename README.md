@@ -28,7 +28,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Autoupdate (Siehe Installation/Update)
 * ...
 
-![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/develop/screenshots/info.jpg)
 
 
 # Quelle/Datenbasis
