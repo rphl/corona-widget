@@ -144,6 +144,17 @@ class IncidenceWidget {
         topBar.text("🦠", Font.mediumSystemFont(22))
         topBar.space(3)
 
+        if (config.widgetFamily !== 'medium' && (ENV.isMediumWidget || CFG.showVaccineInMedium)) {
+            topBar.space()
+            list.addSpacer()
+            let statusError = new UI(list).stack('v', [4, 6, 4, 6])
+            statusError.text('🛠', ENV.fonts.medium)
+            statusError.text('Für 2 Standorte oder Impfquoten Mediumwidget verwenden.\n', ENV.fonts.small, '#999')
+            list.addSpacer(4)
+            list.refreshAfterDate = new Date(Date.now() + ((CFG.scriptRefreshInterval / 2) * 1000))
+            return list
+        }
+
         if (statusPos0 === ENV.status.error || statusPos1 === ENV.status.error) {
             topBar.space()
             list.addSpacer()
