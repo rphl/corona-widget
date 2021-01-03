@@ -145,7 +145,7 @@ class IncidenceWidget {
         topBar.text("🦠", Font.mediumSystemFont(22))
         topBar.space(3)
 
-        if (config.widgetFamily !== 'medium' && (ENV.isMediumWidget || CFG.showVaccineInMedium)) {
+        if (config.runsInWidget !== false && config.widgetFamily !== 'medium' && (ENV.isMediumWidget || CFG.showVaccineInMedium)) {
             topBar.space()
             list.addSpacer()
             let statusError = new UI(list).stack('v', [4, 6, 4, 6])
@@ -376,7 +376,7 @@ class UIComp {
         let bb2 = new UI(b).stack('h', [2, 0, 0, 6])
         bb2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
-        bb2.text(Format.number(99.9, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
+        bb2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         bb2.text(trendArrow, ENV.fonts.normal, trendColor)
@@ -395,7 +395,7 @@ class UIComp {
             } else {
                 vaccineQuote = ENV.cache['vaccine'].quote
             }
-            b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +' %'
+            b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
         }
         b3.text(b3Text, ENV.fonts.xsmall, '#999', 1, 0.9)
 
