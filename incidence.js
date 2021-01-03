@@ -10,8 +10,14 @@
  * AUTHOR: https://github.com/rphl - https://github.com/rphl/corona-widget/
  * ISSUES: https://github.com/rphl/corona-widget/issues
  * 
- * (Old Version see: https://github.com/rphl/corona-widget/blob/master/incidence_icloud_old.js)
  */
+
+// ============= ============= ============= ============= =================
+// ÄNDERUNGEN HIER, WERDEN BEI AKTIVEN AUTOUPDATE ÜBERSCHRIEBEN
+// ZUR KONFIGURATION SIEHE README!
+// https://github.com/rphl/corona-widget#erweiterte-konfiguration
+//
+// ============= ============= ============= ============= =================
 
 let CFG = {
     showVaccineInMedium: false, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
@@ -28,9 +34,6 @@ let CFG = {
 // ============= ============= ============= ============= =================
 // HALT, STOP !!!
 // NACHFOLGENDE ZEILEN NUR AUF EIGENE GEFAHR ÄNDERN !!!
-// ============= ============= ============= ============= =================
-// ZUR KONFIGURATION SIEHE README: 
-// https://github.com/rphl/corona-widget/blob/master/README.md
 // ============= ============= ============= ============= =================
 
 const ENV = {
