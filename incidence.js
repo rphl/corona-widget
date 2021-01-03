@@ -105,7 +105,7 @@ const ENV = {
         error: 500,
         ok: 200
     },
-    isMediumWidget: config.widgetFamily === 'medium',
+    isMediumWidget: false,
     isSameState: false,
     cache: {},
     staticCoordinates: [],
@@ -372,7 +372,7 @@ class UIComp {
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
         let b3Text = ' ';
-        if (!ENV.isMediumWidget && CFG.showVaccineInMedium && ENV.cache.vaccine) {
+        if (CFG.showVaccineInMedium && ENV.cache.vaccine) {
             let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
             let vaccineQuote
             if (typeof ENV.cache['vaccine'].states[vaccineStateName] !== 'undefined') {
