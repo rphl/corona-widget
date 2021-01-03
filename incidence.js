@@ -105,7 +105,7 @@ const ENV = {
         error: 500,
         ok: 200
     },
-    isMediumWidget: false,
+    isMediumWidget: config.widgetFamily === 'medium',
     isSameState: false,
     cache: {},
     staticCoordinates: [],
@@ -121,6 +121,7 @@ class IncidenceWidget {
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
+        if (CFG.showVaccineInMedium) ENV.isMediumWidget = true
         this.loadConfig();
         this.selfUpdate()
     }
@@ -128,7 +129,7 @@ class IncidenceWidget {
         this.widget = await this.createWidget()
         this.widget.setPadding(0, 0, 0, 0)
         if (!config.runsInWidget) {
-            (ENV.isMediumWidget || CFG.showVaccineInMedium) ? await this.widget.presentMedium() : await this.widget.presentSmall()
+            (ENV.isMediumWidget) ? await this.widget.presentMedium() : await this.widget.presentSmall()
         }
         Script.setWidget(this.widget)
         Script.complete()
@@ -136,7 +137,7 @@ class IncidenceWidget {
     async createWidget() {
         const list = new ListWidget()
         const statusPos0 = await Data.load(0)
-        const statusPos1 = (ENV.isMediumWidget) ? await Data.load(1) : false
+        const statusPos1 = (ENV.isMediumWidget && typeof ENV.staticCoordinates[1] !== 'undefined') ? await Data.load(1) : false
 
         Helper.log(statusPos0, statusPos1)
 
@@ -144,17 +145,6 @@ class IncidenceWidget {
         let topBar = new UI(list).stack('h', [4, 8, 4, 4])
         topBar.text("🦠", Font.mediumSystemFont(22))
         topBar.space(3)
-
-        if (config.runsInWidget !== false && config.widgetFamily !== 'medium' && (ENV.isMediumWidget || CFG.showVaccineInMedium)) {
-            topBar.space()
-            list.addSpacer()
-            let statusError = new UI(list).stack('v', [4, 6, 4, 6])
-            statusError.text('🛠', ENV.fonts.medium)
-            statusError.text('Für 2 Standorte oder Impfquoten Mediumwidget verwenden.\n', ENV.fonts.small, '#999')
-            list.addSpacer(4)
-            list.refreshAfterDate = new Date(Date.now() + ((CFG.scriptRefreshInterval / 2) * 1000))
-            return list
-        }
 
         if (statusPos0 === ENV.status.error || statusPos1 === ENV.status.error) {
             topBar.space()
@@ -190,7 +180,7 @@ class IncidenceWidget {
         UIComp.statusBlock(topBar, statusPos0)
         topBar.space(4)
 
-        if (ENV.isMediumWidget && !ENV.isSameState) {
+        if (ENV.isMediumWidget && !ENV.isSameState && statusPos1) {
             topBar.space()
             UIComp.smallIncidenceRow(topBar, 'd', '#99999900')
         }
@@ -201,12 +191,12 @@ class IncidenceWidget {
         let stateBar = new UI(list).stack('h', [0, 0, 0, 0])
         stateBar.space(6)
         let leftCacheID = ENV.cache['s0'].meta.BL_ID
-        if (ENV.isMediumWidget || CFG.showVaccineInMedium) { UIComp.smallIncidenceRow(stateBar, leftCacheID) } else { UIComp.smallIncidenceBlock(stateBar, leftCacheID) }
+        if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, leftCacheID) } else { UIComp.smallIncidenceBlock(stateBar, leftCacheID) }
         stateBar.space(4)
 
         // DEFAULT IS GER... else STATE
-        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState) ? ENV.cache['s1'].meta.BL_ID : 'd'
-        if (ENV.isMediumWidget || CFG.showVaccineInMedium) { UIComp.smallIncidenceRow(stateBar, rightCacheID) } else { UIComp.smallIncidenceBlock(stateBar, rightCacheID) }
+        let rightCacheID = (ENV.isMediumWidget && !ENV.isSameState && statusPos1) ? ENV.cache['s1'].meta.BL_ID : 'd'
+        if (ENV.isMediumWidget) { UIComp.smallIncidenceRow(stateBar, rightCacheID) } else { UIComp.smallIncidenceBlock(stateBar, rightCacheID) }
         stateBar.space(6)
         list.addSpacer(5)
 
@@ -255,18 +245,18 @@ class UIComp {
         let b = new UI(view).stack('v', [4, 6, 4, 6])
         let bb = new UI(b).stack('v', false, '#99999920', 10)
         let padding = [4, 6, 4, 4]
-        if (ENV.isMediumWidget || CFG.showVaccineInMedium) {
+        if (ENV.isMediumWidget) {
             padding = [2, 8, 2, 8]
         }
         let bb2 = new UI(bb).stack('h', padding, '#99999920', 10)
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
-        if (!ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.vaccine !== 'undefined') {
+        if (ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.vaccineRow(bb3, 's0')
-        } else if (ENV.isMediumWidget) {
+        } else if (ENV.isMediumWidget && typeof ENV.cache.s1 !== 'undefined') {
             UIComp.incidenceRow(bb3, 's1')
-        } else {
+        } else if (!ENV.isMediumWidget) {
             bb3.space()
             UIComp.areaIcon(bb3, ENV.cache['s0'].meta.IBZ)
             bb3.space(3)
@@ -295,7 +285,7 @@ class UIComp {
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
         ib.text(trendArrow, Font.boldRoundedSystemFont(20), trendColor, 1, 0.9)
 
-        if (ENV.isMediumWidget || CFG.showVaccineInMedium) {
+        if (ENV.isMediumWidget) {
             b.space(5)
             UIComp.areaIcon(b, ENV.cache[cacheID].meta.IBZ)
             b.space(3)
