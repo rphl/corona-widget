@@ -951,7 +951,7 @@ class Helper {
 const cfm = new CustomFilemanager()
 const rkiRequest = new RkiRequest()
 const c = [// 
- { latitude: 50.935173, longitude: 6.953101, name: false },
+ // { latitude: 50.935173, longitude: 6.953101, name: false },
      //   { latitude: 48.1351, longitude: 11.5819, name: 'Stadt München' },
 //  { latitude: 48.0782, longitude: 11.6392, name: 'Neubiberg' }
  //   { latitude: 51.233334, longitude: 6.783333, name: false }, // düsseldorf
