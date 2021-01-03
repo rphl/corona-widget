@@ -87,7 +87,7 @@ Standorte selbst bennenen. Format: `{POSITION},{LAT},{LON},{NAME};{POSITION},{LA
 
 ## Erweiterte Konfiguration
 
-Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Siehe incidence.js, Änderungen werden bei `scriptSelfUpdate=true` überschrieben)
+Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Änderungen direkt in der incidence.js werden bei `scriptSelfUpdate=true` überschrieben)
 
 * Die dauerhafte Konfiguration wird in einer externen Datei gespeichert.
 * Die Konfigurationsdatei muss selbst angelegt werden: `coronaWidgetNext/config.json`. Diese ist nicht in Scriptable sichtbar!
