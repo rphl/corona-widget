@@ -121,11 +121,11 @@ const ENV = {
 
 class IncidenceWidget {
     constructor(coordinates = []) {
+        this.loadConfig();
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
         if (CFG.showVaccineInMedium) ENV.isMediumWidget = true
-        this.loadConfig();
         this.selfUpdate()
     }
     async init() {
@@ -324,11 +324,11 @@ class UIComp {
         b.space()
         b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b.text(name + ": " + Format.number(ENV.cache.vaccine.states[vaccineStateName].vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        b.text(name + ": " + Format.number(ENV.cache.vaccine.data.states[vaccineStateName].vaccinated), ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
-        b.text("/ D: " + Format.number(ENV.cache.vaccine.vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        b.text("/ D: " + Format.number(ENV.cache.vaccine.data.vaccinated), ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
-        let dateTS = new Date(ENV.cache.vaccine.lastUpdate).getTime()
+        let dateTS = new Date(ENV.cache.vaccine.meta.lastUpdate).getTime()
         let date = Format.dateStr(dateTS)
         b.text('('+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)
         b.space()
@@ -383,10 +383,10 @@ class UIComp {
         if (CFG.showVaccineInMedium && ENV.cache.vaccine) {
             let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
             let vaccineQuote
-            if (typeof ENV.cache['vaccine'].states[vaccineStateName] !== 'undefined') {
-                vaccineQuote = ENV.cache['vaccine'].states[vaccineStateName].quote
+            if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
+                vaccineQuote = ENV.cache.vaccine.data.states[vaccineStateName].quote
             } else {
-                vaccineQuote = ENV.cache['vaccine'].quote
+                vaccineQuote = ENV.cache.vaccine.data.quote
             }
             b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
         }
@@ -720,8 +720,9 @@ class Data {
             let vaccineValues = await rkiRequest.vaccinevalues()
             let vaccineData = new Data('vaccine')
             vaccineData.data = vaccineValues
-            await cfm.save(vaccineValues)
-            ENV.cache.vaccine = vaccineValues
+            vaccineData.meta.lastUpdate = vaccineValues.lastUpdate
+            await cfm.save(vaccineData)
+            ENV.cache.vaccine = vaccineData
         }
 
         if (typeof ENV.cache['s' + useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
