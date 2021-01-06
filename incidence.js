@@ -73,7 +73,7 @@ const ENV = {
         '2' : 'Hamburg',
         '6' : 'Hessen',
         '13' : 'Mecklenburg-Vorpommern',
-        '3' : 'Niedersachen',
+        '3' : 'Niedersachsen',
         '5' : 'Nordrhein-Westfalen',
         '7' : 'Rheinland-Pfalz',
         '10' : 'Saarland',
