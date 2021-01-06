@@ -660,8 +660,12 @@ class Data {
             ENV.cache[areaData.data.meta.BL_ID] = state
 
             const dData = await cfm.read('coronaWidget_d')
-            const d = new Data(areaData.data.meta.BL_ID, dData.data.data, dData.data.meta)
+            const d = new Data('d', dData.data.data, dData.data.meta)
             ENV.cache.d = d
+
+            const vaccineData = await cfm.read('coronaWidget_vaccine')
+            const vaccine = new Data('vaccine', vaccineData.data.data, vaccineData.data.meta)
+            ENV.cache.vaccine = vaccine
 
             return ENV.status.ok
         }
