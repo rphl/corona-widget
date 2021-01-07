@@ -751,7 +751,7 @@ class Format {
     }
     static number(number, fractionDigits = 0, placeholder = null, limit = false) {
         if (!!placeholder && number === 0) return placeholder
-        if (limit !== false && number >= limit) fractionDigits = 0
+        if (limit !== false && Math.round(number) >= limit) fractionDigits = 0
         return Number(number).toLocaleString('de-DE', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits })
     }
     static timestamp(dateStr) {
