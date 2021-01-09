@@ -36,6 +36,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Das Widget basiert auf der offziellen Api des RKI. https://npgeo-corona-npgeo-de.hub.arcgis.com/
 * Die bereitgestellten Daten können in bestimmten Regionen auf Grund von Meldeverzögerungen durch Ämter an das RKI (Api) erst Verzögert (Stunden-Tage) im Widget angezeigt werden.
 * Für die Historie werden ausschliesslich Daten aus der Api verwendet. Somit können sich auf Grund von Verzögerunen/Aktualisierungen Werte wie Inzidenzen, neuen Fälle, etc. immer ändern.
+* "Live-Inzidenz" basiert immer auf den gemeldeten neuen Fälle aus der Api! Und _kann_ sich von dem statischen Wert aus der (RKI) Api unterscheiden. Siehe auch _Erweiterte Konfiguration: Optionen_.
 
 
 # Installation/Update
