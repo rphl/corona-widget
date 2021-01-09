@@ -125,7 +125,6 @@ class IncidenceWidget {
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
-        if (CFG.showVaccineInMedium) ENV.isMediumWidget = true
         this.selfUpdate()
     }
     async init() {
