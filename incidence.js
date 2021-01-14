@@ -706,7 +706,7 @@ class Data {
         // STATE DATA
         if (typeof ENV.cache[locationData.BL_ID] === 'undefined') {
             let stateCases = await rkiRequest.stateCases(locationData.BL_ID)
-            if (!locatiostateCasesnData) {
+            if (!stateCases) {
                 const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
                 return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
             }
@@ -863,7 +863,7 @@ class RkiRequest {
     async exec(url, isJson = true) {
         try {
             const resData = new Request(url)
-            resData.timeoutInterval = 20
+            resData.timeoutInterval = 60
             let data = {}
             let status = ENV.status.ok
             if (isJson) {
