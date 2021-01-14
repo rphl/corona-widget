@@ -106,7 +106,8 @@ const ENV = {
         offline: 418,
         notfound: 404,
         error: 500,
-        ok: 200
+        ok: 200,
+        fromcache: 418
     },
     isMediumWidget: config.widgetFamily === 'medium',
     isSameState: false,
@@ -651,18 +652,22 @@ class Data {
         const dataIds = cacheIDs[cacheID]
         if (typeof dataIds['dataIndex' + useStaticCoordsIndex] !== 'undefined') {
             const areaData = await cfm.read('coronaWidget_' + dataIds['dataIndex' + useStaticCoordsIndex])
+            if (!areaData.data.data) return ENV.status.error
             const area = new Data(dataIds['dataIndex' + useStaticCoordsIndex], areaData.data.data, areaData.data.meta)
             ENV.cache['s' + useStaticCoordsIndex] = area
 
             const stateData = await cfm.read('coronaWidget_' + areaData.data.meta.BL_ID)
+            if (!stateData.data.data) return ENV.status.error
             const state = new Data(areaData.data.meta.BL_ID, stateData.data.data, stateData.data.meta)
             ENV.cache[areaData.data.meta.BL_ID] = state
 
             const dData = await cfm.read('coronaWidget_d')
+            if (!dData.data.data) return ENV.status.error
             const d = new Data('d', dData.data.data, dData.data.meta)
             ENV.cache.d = d
 
             const vaccineData = await cfm.read('coronaWidget_vaccine')
+            if (!vaccineData.data.data) return ENV.status.error
             const vaccine = new Data('vaccine', vaccineData.data.data, vaccineData.data.meta)
             ENV.cache.vaccine = vaccine
 
@@ -676,14 +681,20 @@ class Data {
         let configId = btoa('cID' + JSON.stringify(ENV.staticCoordinates).replace(/[^a-zA-Z ]/g, ""))
         const location = await Helper.getLocation(useStaticCoordsIndex)
         if (!location) {
-            return (await Data.tryLoadFromCache(configId, useStaticCoordsIndex) === ENV.status.ok) ? ENV.status.nogps : ENV.status.error
+            const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+            return (status === ENV.status.ok) ? ENV.status.nogps : ENV.status.error
         }
         const locationData = await rkiRequest.locationData(location)
         if (!locationData) {
-            return (await Data.tryLoadFromCache(configId, useStaticCoordsIndex) === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+            const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+            return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
         }
 
         let areaCases = await rkiRequest.areaCases(locationData.RS)
+        if (!areaCases) {
+            const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+            return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+        }
         await Data.geoCache(configId, useStaticCoordsIndex, locationData.RS)
 
         let areaData = new Data(locationData.RS)
@@ -695,6 +706,10 @@ class Data {
         // STATE DATA
         if (typeof ENV.cache[locationData.BL_ID] === 'undefined') {
             let stateCases = await rkiRequest.stateCases(locationData.BL_ID)
+            if (!locatiostateCasesnData) {
+                const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+                return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+            }
             let stateData = new Data(locationData.BL_ID)
             stateData.data = stateCases
             stateData.meta = {
@@ -709,6 +724,10 @@ class Data {
         // GER DATA
         if (typeof ENV.cache.d === 'undefined') {
             let dCases = await rkiRequest.dCases()
+            if (!dCases) {
+                const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+                return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+            }
             let dData = new Data('d')
             dData.data = dCases
             dData.meta = {
@@ -721,6 +740,10 @@ class Data {
 
         if (typeof ENV.cache.vaccine === 'undefined') {
             let vaccineValues = await rkiRequest.vaccinevalues()
+            if (!vaccineValues) {
+                const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+                return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+            }
             let vaccineData = new Data('vaccine')
             vaccineData.data = vaccineValues
             vaccineData.meta.lastUpdate = vaccineValues.lastUpdate
@@ -848,12 +871,17 @@ class RkiRequest {
             } else {
                 data = await resData.loadString()
             }
-            status = (typeof data.length !== '') ? ENV.status.ok : ENV.status.notfound
+            status = this.checkStatus(data, isJson)
             return new DataResponse(data, status)
         } catch (e) {
             console.warn(e)
             return new DataResponse({}, ENV.status.notfound)
         }
+    }
+    checkStatus (data, isJson) {
+        if (typeof data.length === '') return ENV.status.notfound
+        if (isJson && typeof data.error !== 'undefined') return ENV.status.notfound
+        return ENV.status.ok
     }
 }
 
