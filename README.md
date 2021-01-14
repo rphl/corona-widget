@@ -8,7 +8,7 @@ Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inziden
 
 **Inzidenz**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
-**Inzidenz + Impquoten**
+**Inzidenz + Impfquoten**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_vaccine.jpg)
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
@@ -116,7 +116,7 @@ RKI Dashboard öffnen
 }
 ```
 
-Nur Impquoten anzeigen
+Nur Impfquoten anzeigen
 ```
 {
     "showVaccineInMedium": true
