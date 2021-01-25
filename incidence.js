@@ -20,7 +20,7 @@
 // ============= ============= ============= ============= =================
 
 let CFG = {
-    showVaccineInMedium: false, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showVaccineInMedium: true, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -273,8 +273,8 @@ class UIComp {
         }
     }
     static incidenceRow(view, cacheID) {
-        let b = new UI(view).stack('h', [2,0,0,0],)
-        let ib = new UI(b).stack('h', [2,0,0,0], false, false, false, [72, 26])
+        let b = new UI(view).stack('h', [2,0,0,0])
+        let ib = new UI(b).stack('h', [0,0,0,0], false, false, false, [72, 26])
         ib.elem.centerAlignContent()
 
         let incidence = ENV.cache[cacheID].getDay().incidence
@@ -282,11 +282,11 @@ class UIComp {
         let incidenceParts = incidenceFormatted.split(",")
         ib.text(incidenceParts[0], Font.boldMonospacedSystemFont(26), UI.getIncidenceColor(incidence), 1, 1)
         if (typeof incidenceParts[1] !== "undefined") {
-            ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(20), UI.getIncidenceColor(incidence), 1, 1)
+            ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(18), UI.getIncidenceColor(incidence), 1, 1)
         }
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
         let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
-        ib.text(trendArrow, Font.boldRoundedSystemFont(20), trendColor, 1, 0.9)
+        ib.text(trendArrow, Font.boldRoundedSystemFont(18), trendColor, 1, 0.9)
 
         if (ENV.isMediumWidget) {
             b.space(5)
@@ -299,7 +299,6 @@ class UIComp {
             }
             b.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 1)
         }
-
         b.space()
 
         let b2 = new UI(b).stack('v', [2, 0, 0, 0], false, false, false, [58, 30])
