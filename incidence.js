@@ -480,7 +480,7 @@ class UI {
             let h = Math.max(2,(Math.abs(value) / max) * (height - 1))
             let x = xOffset + (w + 1) * i
             let rect = new Rect(x, height - h - 1, w, h)
-            context.setFillColor(UI.getIncidenceColor((item.cases >= 1) ? item.incidence : 0))
+            context.setFillColor(UI.getIncidenceColor((item.cases >= 0) ? item.incidence : 0))
             context.fillRect(rect)
         }
         return context
@@ -628,11 +628,10 @@ class Data {
         return avg
     }
     static completeHistory (data) {
-        const lastDateHistory = data[data.length - 1].date
         const completeDataObj = {}
         for(let i = 0; i <= CFG.graphShowDays + 8; i++) {
-            let lastReportDate = new Date(lastDateHistory)
-            let prevDate = lastReportDate.setDate(lastReportDate.getDate() - i);
+            let lastDate = new Date()
+            let prevDate = lastDate.setDate(lastDate.getDate() - i);
             completeDataObj[Format.dateStr(prevDate)] = { cases: 0, date: prevDate }
         }
         data.map((value) => {
