@@ -42,7 +42,7 @@ const ENV = {
         darkred: { limit: 100, color: new Color('#c01a00') },
         red: { limit: 50, color: new Color('#f92206') },
         orange: { limit: 35, color: new Color('#faa31b') },
-        yellow: { limit: 25, color: new Color('#f7dd31') },
+        yellow: { limit: 25, color: new Color('#ffff64') },
         green: { limit: 1, color: new Color('#00cc00') },
         gray: { limit: 0, color: new Color('#d0d0d0') }
     },
