@@ -323,13 +323,16 @@ class UIComp {
         b.space()
         b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b.text(name + ": " + Format.number(ENV.cache.vaccine.data.states[vaccineStateName].vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        let vaccinatedState = ENV.cache.vaccine.data.states[vaccineStateName].vaccinated / 1000000;
+        b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
-        b.text("/ D: " + Format.number(ENV.cache.vaccine.data.vaccinated), ENV.fonts.medium, false, 1, 0.9)
+        let vaccinated = ENV.cache.vaccine.data.vaccinated / 1000000;
+        b.text("/ D: " + Format.number(vaccinated, 3) + '', ENV.fonts.medium, false, 1, 0.9)
         b.space(4)
         let dateTS = new Date(ENV.cache.vaccine.meta.lastUpdate).getTime()
         let date = Format.dateStr(dateTS)
-        b.text('('+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)
+        date = date.replace('.2021', '');
+        b.text('(in Mio. / '+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)
         b.space()
         view.space()
     }
