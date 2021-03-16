@@ -22,7 +22,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * 21 Tage Diagram für **Inzidenz** oder **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
 * 7 Tage Schätzwert für **Reproduktionszahl (R)**
 * tägl. **Impfquoten-/zahlen** _(Siehe Konfiguration!)_
-* iCloud Sync
+* iCloud Sync (Optional)
 * Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet)
 * Dark/Lighmode unterstützung
 * Autoupdate (Siehe Installation/Update)
