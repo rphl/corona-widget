@@ -24,7 +24,7 @@ let CFG = {
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
-    csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
+    csvRvalueFields: ['Schätzer_7_Tage_R_Wert', 'Punktschätzer des 7-Tage-R Wertes', 'Schไtzer_7_Tage_R_Wert', 'Punktschไtzer des 7-Tage-R Wertes'], // try to find possible field (column) with rvalue, because rki is changing columnsnames and encoding randomly on each update
     scriptRefreshInterval: 5400, // refresh after 1,5 hours (in seconds)
     scriptSelfUpdate: false, // script updates itself,
     disableLiveIncidence: false, // show old, static incidance. update ONLY ONCE A DAY on intial RKI import
