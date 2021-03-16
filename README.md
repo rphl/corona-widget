@@ -145,13 +145,13 @@ Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild
             "mainBackgroundImageURL": "",
             "mainBackgroundColor": "#f0f0f0",
             "stackBackgroundColor": "#99999920",
-            "stackBackgroundColorSmall": "#99999920",
+            "stackBackgroundColorSmall": "#99999915",
             "stackBackgroundColorSmallTop": "#99999900",
             "areaIconBackgroundColor": "#99999930",
             "titleTextColor": "#222222",
             "titleRowTextColor": "#222222",
             "titleRowTextColor2": "#222222",
-            "smallNameTextColor": "#555555",
+            "smallNameTextColor": "#777777",
             "dateTextColor": "#777777",
             "dateTextColor2": "#777777",
             "graphTextColor": "#888888",
@@ -161,7 +161,7 @@ Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild
             "incidenceColorsOrange": "#faa31b",
             "incidenceColorsYellow": "#ffff64",
             "incidenceColorsGreen": "#00cc00",
-            "incidenceColorsGray": "#d0d0d"
+            "incidenceColorsGray": "#d0d0d0"
         }
     }
 }
@@ -170,28 +170,28 @@ Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild
 
 ```
 {
-    themes: {
-        dark: {
-            mainBackgroundImageURL: '',
-            mainBackgroundColor: '#9999999',
-            stackBackgroundColor: '#99999920',
-            stackBackgroundColorSmall: '#99999915',
-            stackBackgroundColorSmallTop: '#99999900',
-            areaIconBackgroundColor: '#99999930',
-            titleTextColor: '#f0f0f0',
-            titleRowTextColor: '#f0f0f0',
-            titleRowTextColor2: '#f0f0f0',
-            smallNameTextColor: '#888888',
-            dateTextColor: '#777777',
-            dateTextColor2: '#777777',
-            graphTextColor: '#888888',
-            incidenceColorsDarkdarkred: '#941100',
-            incidenceColorsDarkred: '#c01a00',
-            incidenceColorsRed: '#f92206',
-            incidenceColorsOrange: '#faa31b',
-            incidenceColorsYellow: '#ffff64',
-            incidenceColorsGreen: '#00cc00',
-            incidenceColorsGray: '#d0d0d0'
+    "themes": {
+        "dark": {
+            "mainBackgroundImageURL": "",
+            "mainBackgroundColor": "#9999999",
+            "stackBackgroundColor": "#99999920",
+            "stackBackgroundColorSmall": "#99999915",
+            "stackBackgroundColorSmallTop": "#99999900",
+            "areaIconBackgroundColor": "#99999930",
+            "titleTextColor": "#f0f0f0",
+            "titleRowTextColor": "#f0f0f0",
+            "titleRowTextColor2": "#f0f0f0",
+            "smallNameTextColor": "#888888",
+            "dateTextColor": "#777777",
+            "dateTextColor2": "#777777",
+            "graphTextColor": "#888888",
+            "incidenceColorsDarkdarkred": "#941100",
+            "incidenceColorsDarkred": "#c01a00",
+            "incidenceColorsRed": "#f92206",
+            "incidenceColorsOrange": "#faa31b",
+            "incidenceColorsYellow": "#ffff64",
+            "incidenceColorsGreen": "#00cc00",
+            "incidenceColorsGray": "#d0d0d0"
         }
     }
 }
