@@ -26,7 +26,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet)
 * Dark/Lighmode unterstützung (_Siehe Konfiguration_)
 * Autoupdate (Siehe Installation/Update)
-* Eine Art **"Themes"**: Farben/Hintergerundbild. (_Siehe Konfiguration_)
+* Eine Art **"Themes"**: Farben/Hintergrundbild. (_Siehe Konfiguration_)
 * ...
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
