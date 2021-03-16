@@ -20,6 +20,7 @@
 // ============= ============= ============= ============= =================
 
 let CFG = {
+    theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only lightmode is used
     showVaccineInMedium: true, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
@@ -37,14 +38,60 @@ let CFG = {
 // ============= ============= ============= ============= =================
 
 const ENV = {
+    themes: {
+        light: {
+            mainBackgroundImageURL: '',
+            mainBackgroundColor: '#f0f0f0',
+            stackBackgroundColor: '#99999920',
+            stackBackgroundColorSmall: '#99999915',
+            stackBackgroundColorSmallTop: '#99999900',
+            areaIconBackgroundColor: '#99999930',
+            titleTextColor: '#222222',
+            titleRowTextColor: '#222222',
+            titleRowTextColor2: '#222222',
+            smallNameTextColor: '#777777',
+            dateTextColor: '#777777',
+            dateTextColor2: '#777777',
+            graphTextColor: '#888888',
+            incidenceColorsDarkdarkred: '#941100',
+            incidenceColorsDarkred: '#c01a00',
+            incidenceColorsRed: '#f92206',
+            incidenceColorsOrange: '#faa31b',
+            incidenceColorsYellow: '#ffff64',
+            incidenceColorsGreen: '#00cc00',
+            incidenceColorsGray: '#d0d0d0'
+        },
+        dark: {
+            mainBackgroundImageURL: '',
+            mainBackgroundColor: '#9999999',
+            stackBackgroundColor: '#99999920',
+            stackBackgroundColorSmall: '#99999910',
+            stackBackgroundColorSmallTop: '#99999900',
+            areaIconBackgroundColor: '#99999930',
+            titleTextColor: '#f0f0f0',
+            titleRowTextColor: '#f0f0f0',
+            titleRowTextColor2: '#f0f0f0',
+            smallNameTextColor: '#888888',
+            dateTextColor: '#777777',
+            dateTextColor2: '#777777',
+            graphTextColor: '#888888',
+            incidenceColorsDarkdarkred: '#941100',
+            incidenceColorsDarkred: '#c01a00',
+            incidenceColorsRed: '#f92206',
+            incidenceColorsOrange: '#faa31b',
+            incidenceColorsYellow: '#ffff64',
+            incidenceColorsGreen: '#00cc00',
+            incidenceColorsGray: '#d0d0d0'
+        }
+    },
     incidenceColors: {
-        darkdarkred: { limit: 250, color: new Color('#941100') },
-        darkred: { limit: 100, color: new Color('#c01a00') },
-        red: { limit: 50, color: new Color('#f92206') },
-        orange: { limit: 35, color: new Color('#faa31b') },
-        yellow: { limit: 25, color: new Color('#ffff64') },
-        green: { limit: 1, color: new Color('#00cc00') },
-        gray: { limit: 0, color: new Color('#d0d0d0') }
+        darkdarkred: { limit: 250, color: 'incidenceColorsDarkdarkred' },
+        darkred: { limit: 100, color: 'incidenceColorsDarkred' },
+        red: { limit: 50, color: 'incidenceColorsRed' },
+        orange: { limit: 35, color: 'incidenceColorsOrange' },
+        yellow: { limit: 25, color: 'incidenceColorsYellow' },
+        green: { limit: 1, color: 'incidenceColorsGreen' },
+        gray: { limit: 0, color: 'incidenceColorsGray' }
     },
     statesAbbr: {
         '8': 'BW',
@@ -120,17 +167,56 @@ const ENV = {
     }
 }
 
+class Theme {
+    static getCurrentTheme () {
+        let theme = 'auto';
+        if (CFG.theme === 'light' || CFG.theme === 'dark') {
+            theme = CFG.theme
+        }
+        return theme
+    }
+    static getColor(colorName, useDefault = false) {
+        let theme = Theme.getCurrentTheme();
+        if (theme === 'auto' && useDefault) {
+            theme = 'light';
+        }
+        if (theme === 'light' || theme === 'dark') {
+            return new Color(ENV.themes[theme][colorName])
+        }
+        return false // no color preferred
+    }
+    static setColor(object, propertyName, colorName, useDefault = false) {
+        if (CFG.theme === 'light' || CFG.theme === 'dark' || useDefault) {
+            let theme = Theme.getCurrentTheme();
+            object[propertyName] = new Color(ENV.themes[theme][colorName])
+        }
+    }
+}
+
 class IncidenceWidget {
     constructor(coordinates = []) {
         this.loadConfig();
         if (args.widgetParameter) ENV.staticCoordinates = Parse.input(args.widgetParameter)
         ENV.staticCoordinates = [...ENV.staticCoordinates, ...coordinates]
         if (typeof ENV.staticCoordinates[1] !== 'undefined' && Object.keys(ENV.staticCoordinates[1]).length >= 3) ENV.isMediumWidget = true
+        Helper.log("Current Theme:", Theme.getCurrentTheme())
         this.selfUpdate()
     }
     async init() {
         this.widget = await this.createWidget()
         this.widget.setPadding(0, 0, 0, 0)
+
+        if (Theme.getCurrentTheme() === 'light' && Theme.getCurrentTheme() === 'dark') {
+            const backgroundImageUrl = ENV.themes[Theme.getCurrentTheme()]['mainBackgroundImageURL']
+            if (backgroundImageUrl !== '') {
+                const i = await new Request(backgroundImageUrl);
+                const img = await i.loadImage();
+                this.widget.backgroundImage = img
+            }
+        }
+
+        Theme.setColor(this.widget, 'backgroundColor', 'mainBackgroundColor')
+
         if (!config.runsInWidget) {
             (ENV.isMediumWidget) ? await this.widget.presentMedium() : await this.widget.presentSmall()
         }
@@ -142,8 +228,6 @@ class IncidenceWidget {
         const statusPos0 = await Data.load(0)
         const statusPos1 = (ENV.isMediumWidget && typeof ENV.staticCoordinates[1] !== 'undefined') ? await Data.load(1) : false
 
-        Helper.log(statusPos0, statusPos1)
-
         // UI ===============
         let topBar = new UI(list).stack('h', [4, 8, 4, 4])
         topBar.text("🦠", Font.mediumSystemFont(22))
@@ -154,7 +238,7 @@ class IncidenceWidget {
             list.addSpacer()
             let statusError = new UI(list).stack('v', [4, 6, 4, 6])
             statusError.text('⚡️', ENV.fonts.medium)
-            statusError.text('Standortdaten konnten nicht geladen werden. \nKein Cache verfügbar. \n\nBitte später nochmal versuchen.', ENV.fonts.small, '#999')
+            statusError.text('Standortdaten konnten nicht geladen werden. \nKein Cache verfügbar. \n\nBitte später nochmal versuchen.', ENV.fonts.small, Theme.getColor('titleTextColor'))
             list.addSpacer(4)
             list.refreshAfterDate = new Date(Date.now() + ((CFG.scriptRefreshInterval / 2) * 1000))
             return list
@@ -173,10 +257,10 @@ class IncidenceWidget {
         if (statusPos1 && !ENV.isSameState) Helper.calcIncidence(ENV.cache['s1'].meta.BL_ID)
 
         let topRStack = new UI(topBar).stack('v', [0,0,0,0])
-        topRStack.text(Format.number(ENV.cache.d.meta.r, 2, 'n/v') + 'ᴿ', ENV.fonts.medium)
+        topRStack.text(Format.number(ENV.cache.d.meta.r, 2, 'n/v') + 'ᴿ', ENV.fonts.medium, Theme.getColor('titleTextColor'))
         let updatedDate = Format.dateStr(ENV.cache.d.getDay().date);
         let updatedTime = ('' + new Date().getHours()).padStart(2, '0') + ':' + ('' + new Date().getMinutes()).padStart(2, '0')
-        topRStack.text(updatedDate + ' ' +updatedTime, ENV.fonts.xsmall, '#777')
+        topRStack.text(updatedDate + ' ' +updatedTime, ENV.fonts.xsmall, Theme.getColor('dateTextColor', true))
         
 
         topBar.space()
@@ -185,7 +269,7 @@ class IncidenceWidget {
 
         if (ENV.isMediumWidget && !ENV.isSameState && statusPos1) {
             topBar.space()
-            UIComp.smallIncidenceRow(topBar, 'd', '#99999900')
+            UIComp.smallIncidenceRow(topBar, 'd', 'stackBackgroundColorSmallTop')
         }
 
         UIComp.incidenceVaccineRows(list)
@@ -237,7 +321,17 @@ class IncidenceWidget {
     async loadConfig () {
         let path = cfm.fm.joinPath(cfm.configPath, 'config.json');
         if (cfm.fm.fileExists(path)) {
+            Helper.log('Loading config.json (defaults will be overwritten)')
             const cfg = await cfm.read('config')
+            if (typeof cfg.data.themes !== 'undefined' && typeof cfg.data.themes.dark !== 'undefined') {
+                ENV.themes.dark = Object.assign(ENV.themes.dark, cfg.data.themes.dark)   
+            }
+            Object.keys(ENV.themes).forEach(theme => {
+                if (typeof cfg.data.themes !== 'undefined' && typeof cfg.data.themes[theme] !== 'undefined') {
+                    Helper.log('Loading custom theme from config.json: ' + theme)
+                    ENV.themes[theme] = Object.assign(ENV.themes[theme], cfg.data.themes[theme])   
+                }
+            })
             if (cfg.status === ENV.status.ok) CFG = Object.assign(CFG, cfg.data)
         }
     }
@@ -246,12 +340,12 @@ class IncidenceWidget {
 class UIComp {
     static incidenceVaccineRows(view) {
         let b = new UI(view).stack('v', [4, 6, 4, 6])
-        let bb = new UI(b).stack('v', false, '#99999920', 10)
+        let bb = new UI(b).stack('v', false, Theme.getColor('stackBackgroundColor', true), 10)
         let padding = [4, 6, 4, 4]
         if (ENV.isMediumWidget) {
             padding = [2, 8, 2, 8]
         }
-        let bb2 = new UI(bb).stack('h', padding, '#99999920', 10)
+        let bb2 = new UI(bb).stack('h', padding, Theme.getColor('stackBackgroundColor', true), 10)
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
@@ -267,7 +361,7 @@ class UIComp {
             if (typeof ENV.staticCoordinates[0] !== 'undefined' && ENV.staticCoordinates[0].name !== false) {
                 areaName = ENV.staticCoordinates[0].name
             }
-            bb3.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 0.9)
+            bb3.text(areaName.toUpperCase(), ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
             bb3.space(8) // center title if small widget
             bb3.space()
         }
@@ -285,7 +379,7 @@ class UIComp {
             ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(18), UI.getIncidenceColor(incidence), 1, 1)
         }
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
-        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        let trendColor = (trendArrow === '↑') ? Theme.getColor(ENV.incidenceColors.red.color, true) : (trendArrow === '↓') ? Theme.getColor(ENV.incidenceColors.green.color, true) : Theme.getColor(ENV.incidenceColors.gray.color, true)
         ib.text(trendArrow, Font.boldRoundedSystemFont(18), trendColor, 1, 0.9)
 
         if (ENV.isMediumWidget) {
@@ -297,7 +391,7 @@ class UIComp {
             if (typeof ENV.staticCoordinates[cacheIndex] !== 'undefined' && ENV.staticCoordinates[cacheIndex].name !== false) {
                 areaName = ENV.staticCoordinates[cacheIndex].name
             }
-            b.text(areaName.toUpperCase(), ENV.fonts.medium, false, 1, 1)
+            b.text(areaName.toUpperCase(), ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 1)
         }
         b.space()
 
@@ -312,7 +406,7 @@ class UIComp {
 
         let bb2 = new UI(b2).stack('h')
         bb2.space()
-        bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#888', 1, 1)
+        bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 1)
         bb2.space(0)
     }
     static vaccineRow (view, cacheID) {
@@ -324,29 +418,29 @@ class UIComp {
         b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
         let vaccinatedState = ENV.cache.vaccine.data.states[vaccineStateName].vaccinated / 1000000;
-        b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, false, 1, 0.9)
+        b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
         b.space(4)
         let vaccinated = ENV.cache.vaccine.data.vaccinated / 1000000;
-        b.text("/ D: " + Format.number(vaccinated, 3) + '', ENV.fonts.medium, false, 1, 0.9)
+        b.text("/ D: " + Format.number(vaccinated, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
         b.space(4)
         let dateTS = new Date(ENV.cache.vaccine.meta.lastUpdate).getTime()
         let date = Format.dateStr(dateTS)
         date = date.replace('.2021', '');
-        b.text('(in Mio. / '+ date +')', ENV.fonts.xsmall, '#777', 1, 0.9)
+        b.text('(in Mio. / '+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
         b.space()
         view.space()
     }
     static smallIncidenceBlock(view, cacheID, options = {}) {
-        let b = new UI(view).stack('v', false, '#99999915', 12)
+        let b = new UI(view).stack('v', false, Theme.getColor('stackBackgroundColorSmall', true), 12)
         let b2 = new UI(b).stack('h', [4, 0, 0, 5])
         b2.space()
         let incidence = ENV.cache[cacheID].getDay().incidence
         b2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.small2, UI.getIncidenceColor(incidence), 1, 1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
-        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        let trendColor = (trendArrow === '↑') ? Theme.getColor(ENV.incidenceColors.red.color, true) : (trendArrow === '↓') ? Theme.getColor(ENV.incidenceColors.green.color, true) : Theme.getColor(ENV.incidenceColors.gray.color, true)
         b2.text(trendArrow, ENV.fonts.small2, trendColor, 1, 1)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        b2.text(name.toUpperCase(), ENV.fonts.small2, '#777', 1, 1)
+        b2.text(name.toUpperCase(), ENV.fonts.small2, Theme.getColor('smallNameTextColor', true), 1, 1)
 
         let b3 = new UI(b).stack('h', [0, 0, 0, 5])
         b3.space()
@@ -361,11 +455,12 @@ class UIComp {
 
         let b4 = new UI(b).stack('h', [0, 0, 1, 5])
         b4.space()
-        b4.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#777', 1, 0.9)
+        b4.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
         b.space(2)
     }
-    static smallIncidenceRow(view, cacheID, bgColor = '#99999915') {
-        let r = new UI(view).stack('h', false, bgColor, 12)
+
+    static smallIncidenceRow(view, cacheID, bgColor = 'stackBackgroundColorSmall') {
+        let r = new UI(view).stack('h', false, Theme.getColor(bgColor, true), 12)
         let b = new UI(r).stack('v')
 
         let bb2 = new UI(b).stack('h', [2, 0, 0, 6])
@@ -373,11 +468,11 @@ class UIComp {
         let incidence = ENV.cache[cacheID].getDay().incidence
         bb2.text(Format.number(incidence, 1, 'n/v', 100), ENV.fonts.normal, UI.getIncidenceColor(incidence), 1 ,1)
         let trendArrow = UI.getTrendArrow(ENV.cache[cacheID].getAvg(0), ENV.cache[cacheID].getAvg(1))
-        let trendColor = (trendArrow === '↑') ? ENV.incidenceColors.red.color : (trendArrow === '↓') ? ENV.incidenceColors.green.color : ENV.incidenceColors.gray.color
+        let trendColor = (trendArrow === '↑') ? Theme.getColor(ENV.incidenceColors.red.color, true) : (trendArrow === '↓') ? Theme.getColor(ENV.incidenceColors.green.color, true) : Theme.getColor(ENV.incidenceColors.gray.color, true)
         bb2.text(trendArrow, ENV.fonts.normal, trendColor)
         bb2.space(2)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        bb2.text(name.toUpperCase(), ENV.fonts.normal, '#999')
+        bb2.text(name.toUpperCase(), ENV.fonts.normal, Theme.getColor('smallNameTextColor', true))
 
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
@@ -392,7 +487,7 @@ class UIComp {
             }
             b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
         }
-        b3.text(b3Text, ENV.fonts.xsmall, '#999', 1, 0.9)
+        b3.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
 
         let b2 = new UI(r).stack('v', false, false, false, false, [60, 30])
         let b2b2 = new UI(b2).stack('h', [0, 0, 0, 6])
@@ -407,13 +502,13 @@ class UIComp {
 
         let b2b3 = new UI(b2).stack('h', [0, 0, 0, 0])
         b2b3.space()
-        b2b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, '#999', 1, 0.9)
+        b2b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
 
         r.space(6)
     }
     static areaIcon(view, ibzID) {
-        let b = new UI(view).stack('h', [1, 3, 1, 3], '#99999930', 2, 2)
-        b.text(ENV.areaIBZ[ibzID], ENV.fonts.xsmall, false, 1, 1)
+        let b = new UI(view).stack('h', [1, 3, 1, 3], Theme.getColor('areaIconBackgroundColor', true), 2, 2)
+        b.text(ENV.areaIBZ[ibzID], ENV.fonts.xsmall, Theme.getColor('titleRowTextColor'), 1, 1)
     }
     static statusBlock(view, status) {
         let icon
@@ -431,7 +526,6 @@ class UIComp {
         if (icon && iconText) {
             let topStatusStack = new UI(view).stack('v')
             topStatusStack.text(icon, ENV.fonts.small)
-            // topStatusStack.text(iconText, ENV.fonts.xsmall, '#999999')
         }
     }
 }
@@ -493,9 +587,9 @@ class UI {
         if (radius) this.elem.cornerRadius = radius
         if (borderWidth !== false) {
             this.elem.borderWidth = borderWidth
-            this.elem.borderColor = new Color(borderBgColor)
+            this.elem.borderColor = borderBgColor
         } else if (borderBgColor) {
-            this.elem.backgroundColor = new Color(borderBgColor)
+            this.elem.backgroundColor = borderBgColor
         }
         if (padding) this.elem.setPadding(...padding)
         if (size) this.elem.size = new Size(size[0], size[1])
@@ -531,24 +625,24 @@ class UI {
         return (value1 < value2) ? '↓' : (value1 > value2) ? '↑' : '→'
     }
     static getTrendColor(value1, value2, altColorUp = null, altColorDown = null) {
-        let colorUp = (altColorUp) ? new Color(altColorUp) : ENV.incidenceColors.red.color
-        let colorDown = (altColorDown) ? new Color(altColorDown) : ENV.incidenceColors.green.color
-        return (value1 < value2) ? colorDown : (value1 > value2) ? colorUp : ENV.incidenceColors.gray.color
+        let colorUp = (altColorUp) ? new Color(altColorUp) : Theme.getColor(ENV.incidenceColors.red.color, true)
+        let colorDown = (altColorDown) ? new Color(altColorDown) : Theme.getColor(ENV.incidenceColors.green.color, true)
+        return (value1 < value2) ? colorDown : (value1 > value2) ? colorUp : Theme.getColor(ENV.incidenceColors.gray.color, true)
     }
     static getIncidenceColor(incidence) {
-        let color = ENV.incidenceColors.green.color
+        let color = Theme.getColor(ENV.incidenceColors.green.color, true)
         if (incidence > ENV.incidenceColors.darkdarkred.limit) {
-            color = ENV.incidenceColors.darkdarkred.color
+            color = Theme.getColor(ENV.incidenceColors.darkdarkred.color, true)
         } else if (incidence >= ENV.incidenceColors.darkred.limit) {
-            color = ENV.incidenceColors.darkred.color
+            color = Theme.getColor(ENV.incidenceColors.darkred.color, true)
         } else if (incidence >= ENV.incidenceColors.red.limit) {
-            color = ENV.incidenceColors.red.color
+            color = Theme.getColor(ENV.incidenceColors.red.color, true)
         } else if (incidence >= ENV.incidenceColors.orange.limit) {
-            color = ENV.incidenceColors.orange.color
+            color = Theme.getColor(ENV.incidenceColors.orange.color, true)
         } else if (incidence >= ENV.incidenceColors.yellow.limit) {
-            color = ENV.incidenceColors.yellow.color
+            color = Theme.getColor(ENV.incidenceColors.yellow.color, true)
         } else if (incidence === 0) {
-            color = ENV.incidenceColors.gray.color
+            color = Theme.getColor(ENV.incidenceColors.gray.color, true)
         }
         return color
     }

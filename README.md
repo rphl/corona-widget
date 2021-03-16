@@ -15,7 +15,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 
 **☕️ Einen Kaffee ausgeben 🙃:** https://ko-fi.com/rapha
 
-# Features
+# ✨ Features
 
 * **Live Inzidenz** + **Wochentrend!** für Stadt/Kreis, Bundesland, Bund
 * **Neue tägl. Fälle** für Stadt/Kreis, Bundesland, Bund
@@ -24,14 +24,15 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * tägl. **Impfquoten-/zahlen** _(Siehe Konfiguration!)_
 * iCloud Sync (Optional)
 * Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet)
-* Dark/Lighmode unterstützung
+* Dark/Lighmode unterstützung (_Siehe Konfiguration_)
 * Autoupdate (Siehe Installation/Update)
+* Eine Art **"Themes"**: Farben/Hintergerundbild. (_Siehe Konfiguration_)
 * ...
 
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/info.jpg)
 
 
-# Quelle/Datenbasis
+# 📚 Quelle/Datenbasis
 
 * Das Widget basiert auf der offziellen Api des RKI. https://npgeo-corona-npgeo-de.hub.arcgis.com/
 * Die bereitgestellten Daten können in bestimmten Regionen auf Grund von Meldeverzögerungen durch Ämter an das RKI (Api) erst Verzögert (Stunden-Tage) im Widget angezeigt werden.
@@ -39,7 +40,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * "Live-Inzidenz" basiert immer auf den gemeldeten neuen Fälle aus der Api! Und _kann_ sich von dem statischen Wert aus der (RKI) Api unterscheiden. Siehe auch _Erweiterte Konfiguration: Optionen_.
 
 
-# Installation/Update
+# 📲 Installation/Update
 
 **Manuell**
 * Safari öffnen: https://raw.githubusercontent.com/rphl/corona-widget/master/incidence.js
@@ -51,7 +52,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * ...andere Option: https://scriptdu.de/
 
 
-# Konfiguration
+# ⚙️ Konfiguration
 
 * Daten werden unter **Dateien (App)** > **iCloud** > **Scriptable** > **coronaWidgetNext** > *.json zwischengespeichert.
 * Die allgemeine Konfiguration erfolgt mittels **WidgetParameter**:
@@ -95,7 +96,7 @@ Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Änderungen 
 * Zum anlegen und bearbeiten kann z.B Kodex https://apps.apple.com/de/app/kodex/id1038574481 für iPhone/iPad verwendet werden.
 
 **Optionen:**
-
+* `theme: ''` Automatic Light/Darkmode switch = `''` OR  lightmode only = `light` OR darkmode only = `dark`
 * `showVaccineInMedium: false` show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
 * `openUrl: false` "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", open RKI URL on tap, set false to disable
 * `graphShowValues: 'i'` 'i' = incidence OR 'c' = cases
@@ -107,23 +108,103 @@ Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Änderungen 
 * `debugIncidenceCalc: false` show all calculated incidencevalues on console
 
 
-**Beispiel** config.json =
+**BEISPIELE** config.json =
 
-RKI Dashboard öffnen
+**RKI Dashboard beim antippen öffnen**
 ```
 {
     "openUrl": "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
 }
 ```
 
-Nur Impfquoten anzeigen
+**Dark-/Light anpassen. Nur Lightmode nutzen:**
+```
+{
+    "theme": "light"
+    ....
+    "themes": {
+        "light": {
+            ...
+        },
+         "dark": {
+            ...
+        }
+}
+```
+
+**Farben anpassen. --- Es müssen immer alle Werte eine Themes überschrieben werden ---**
+
+Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild gesetzt werden (Siehe Themewerte)
+
+**Standard Light Farben:**
+
+```
+{
+    "themes": {
+        "light": {
+            "mainBackgroundImageURL": "",
+            "mainBackgroundColor": "#f0f0f0",
+            "stackBackgroundColor": "#99999920",
+            "stackBackgroundColorSmall": "#99999920",
+            "stackBackgroundColorSmallTop": "#99999900",
+            "areaIconBackgroundColor": "#99999930",
+            "titleTextColor": "#222222",
+            "titleRowTextColor": "#222222",
+            "titleRowTextColor2": "#222222",
+            "smallNameTextColor": "#555555",
+            "dateTextColor": "#777777",
+            "dateTextColor2": "#777777",
+            "graphTextColor": "#888888",
+            "incidenceColorsDarkdarkred": "#941100",
+            "incidenceColorsDarkred": "#c01a00",
+            "incidenceColorsRed": "#f92206",
+            "incidenceColorsOrange": "#faa31b",
+            "incidenceColorsYellow": "#ffff64",
+            "incidenceColorsGreen": "#00cc00",
+            "incidenceColorsGray": "#d0d0d"
+        }
+    }
+}
+```
+**Standard Dark Farben:**
+
+```
+{
+    themes: {
+        dark: {
+            mainBackgroundImageURL: '',
+            mainBackgroundColor: '#9999999',
+            stackBackgroundColor: '#99999920',
+            stackBackgroundColorSmall: '#99999915',
+            stackBackgroundColorSmallTop: '#99999900',
+            areaIconBackgroundColor: '#99999930',
+            titleTextColor: '#f0f0f0',
+            titleRowTextColor: '#f0f0f0',
+            titleRowTextColor2: '#f0f0f0',
+            smallNameTextColor: '#888888',
+            dateTextColor: '#777777',
+            dateTextColor2: '#777777',
+            graphTextColor: '#888888',
+            incidenceColorsDarkdarkred: '#941100',
+            incidenceColorsDarkred: '#c01a00',
+            incidenceColorsRed: '#f92206',
+            incidenceColorsOrange: '#faa31b',
+            incidenceColorsYellow: '#ffff64',
+            incidenceColorsGreen: '#00cc00',
+            incidenceColorsGray: '#d0d0d0'
+        }
+    }
+}
+```
+
+**Nur Impfquoten anzeigen**
 ```
 {
     "showVaccineInMedium": true
 }
 ```
 
-... oder
+**... oder**
 ```
 {
     "openUrl": "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
