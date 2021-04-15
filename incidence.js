@@ -206,7 +206,7 @@ class IncidenceWidget {
         this.widget = await this.createWidget()
         this.widget.setPadding(0, 0, 0, 0)
 
-        if (Theme.getCurrentTheme() === 'light' && Theme.getCurrentTheme() === 'dark') {
+        if (Theme.getCurrentTheme() === 'light' || Theme.getCurrentTheme() === 'dark') {
             const backgroundImageUrl = ENV.themes[Theme.getCurrentTheme()]['mainBackgroundImageURL']
             if (backgroundImageUrl !== '') {
                 const i = await new Request(backgroundImageUrl);
