@@ -20,8 +20,9 @@
 // ============= ============= ============= ============= =================
 
 let CFG = {
-    theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only lightmode is used
-    showVaccineInMedium: true, // "show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only darkmode is used
+    showVaccineInMedium: false, // "show vaccine values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showVaccineInMediumRows: true, // "show vaccine percent based on RKI reports (State/Country). MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -170,17 +171,17 @@ const ENV = {
 class Theme {
     static getCurrentTheme () {
         let theme = 'auto';
-        if (CFG.theme === 'light' || CFG.theme === 'dark') {
+        if (CFG.theme === 'light' || CFG.theme === 'dark') {
             theme = CFG.theme
         }
         return theme
     }
     static getColor(colorName, useDefault = false) {
         let theme = Theme.getCurrentTheme();
-        if (theme === 'auto' && useDefault) {
+        if (theme === 'auto' && useDefault) {
             theme = 'light';
         }
-        if (theme === 'light' || theme === 'dark') {
+        if (theme === 'light' || theme === 'dark') {
             return new Color(ENV.themes[theme][colorName])
         }
         return false // no color preferred
@@ -349,7 +350,9 @@ class UIComp {
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
-        if (ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+        if (ENV.isMediumWidget && !CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+            UIComp.statisticsRow(bb3, 's0')
+        } else if (ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.vaccineRow(bb3, 's0')
         } else if (ENV.isMediumWidget && typeof ENV.cache.s1 !== 'undefined') {
             UIComp.incidenceRow(bb3, 's1')
@@ -409,13 +412,49 @@ class UIComp {
         bb2.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 1)
         bb2.space(0)
     }
+    static statisticsRow(view, cacheID) {
+        const data = ENV.cache[cacheID];
+
+        let b = new UI(view).stack('h', [4,0,4,0])
+        b.elem.centerAlignContent()
+        b.space()
+        b.text("Diff. ", ENV.fonts.medium, false, 1, 0.9)
+        const dayLastWeek = Format.dateStr(data.getDay(7).date, false);
+        b.text(` ${dayLastWeek} `, ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
+
+        let diffDay = 0
+        if (data.getDay(0).cases > 0) {
+            diffDay = (data.getDay(0).incidence / data.getDay(7).incidence * 100) - 100;
+            if (diffDay > 0) {
+                b.text("+", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.red.color, true), 1, 0.9)
+            } else if (diffDay < 0) {
+                b.text("-", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.green.color, true), 1, 0.9)
+            }
+        }
+        b.text( Format.number(Math.abs(diffDay), 2, ' n/v '), ENV.fonts.medium, false, 1, 0.9)
+        if (data.getDay(0).cases > 0) {
+            b.text( '% ', ENV.fonts.medium, false, 1, 0.9)
+        }
+
+        b.text(` WOCHE Ø `, ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        const diffWeek = (data.getAvg(0) / data.getAvg(1) * 100) - 100;
+        if (diffWeek > 0) {
+            b.text("+", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.red.color, true), 1, 0.9)
+        } else if (diffWeek < 0) {
+            b.text("-", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.green.color, true), 1, 0.9)
+        }
+
+        b.text( Format.number(Math.abs(diffWeek), 2) + '%', ENV.fonts.medium, false, 1, 0.9)
+        b.space()
+        view.space()
+    }
     static vaccineRow (view, cacheID) {
         let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
 
-        let b = new UI(view).stack('h', [4,0,4,0],)
+        let b = new UI(view).stack('h', [4,0,4,0])
         b.elem.centerAlignContent()
         b.space()
-        b.text("🧬 ", ENV.fonts.medium, false, 1, 0.9)
+        b.text("💉 ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
         let vaccinatedState = ENV.cache.vaccine.data.states[vaccineStateName].vaccinated / 1000000;
         b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
@@ -477,7 +516,7 @@ class UIComp {
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
         let b3Text = ' ';
-        if (CFG.showVaccineInMedium && ENV.cache.vaccine) {
+        if ((CFG.showVaccineInMedium || CFG.showVaccineInMediumRows) && ENV.cache.vaccine) {
             let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
             let vaccineQuote
             if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
@@ -485,7 +524,7 @@ class UIComp {
             } else {
                 vaccineQuote = ENV.cache.vaccine.data.quote
             }
-            b3Text = '🧬 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
+            b3Text = '💉 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
         }
         b3.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
 
@@ -721,7 +760,6 @@ class Data {
         const offsetDays = 7
         const weekData = casesData.slice((offsetDays * weekOffset) + skipToday, (offsetDays * weekOffset) + 7 + skipToday)
         const avg = weekData.reduce((a, b) => a + b.incidence, 0) / offsetDays
-        // Helper.log(weekOffset, avg)
         return avg
     }
     static completeHistory (data) {
@@ -862,9 +900,11 @@ class Data {
 }
 
 class Format {
-    static dateStr(timestamp) {
+    static dateStr(timestamp, showYear = true) {
         let date = new Date(timestamp)
-        return `${('' + date.getDate()).padStart(2, '0')}.${('' + (date.getMonth() + 1)).padStart(2, '0')}.${date.getFullYear()}`
+        let dateStr = `${('' + date.getDate()).padStart(2, '0')}.${('' + (date.getMonth() + 1)).padStart(2, '0')}`
+        if (showYear) dateStr += `.${date.getFullYear()}`
+        return dateStr
     }
     static number(number, fractionDigits = 0, placeholder = null, limit = false) {
         if (!!placeholder && number === 0) return placeholder
@@ -1066,6 +1106,13 @@ class Helper {
     static log(...data) {
         console.log(data.map(JSON.stringify).join(' | '))
     }
+    static getWeek(timestamp) {
+        const date = new Date(timestamp);
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+        var week1 = new Date(date.getFullYear(), 0, 4);
+        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+      }
 }
 
 const cfm = new CustomFilemanager()
