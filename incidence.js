@@ -58,7 +58,7 @@ const ENV = {
             incidenceColorsDarkred: '#c01a00',
             incidenceColorsRed: '#f92206',
             incidenceColorsOrange: '#faa31b',
-            incidenceColorsYellow: '#ffff64',
+            incidenceColorsYellow: '#ffd800',
             incidenceColorsGreen: '#00cc00',
             incidenceColorsGray: '#d0d0d0'
         },
@@ -80,7 +80,7 @@ const ENV = {
             incidenceColorsDarkred: '#c01a00',
             incidenceColorsRed: '#f92206',
             incidenceColorsOrange: '#faa31b',
-            incidenceColorsYellow: '#ffff64',
+            incidenceColorsYellow: '#ffd800',
             incidenceColorsGreen: '#00cc00',
             incidenceColorsGray: '#d0d0d0'
         }
