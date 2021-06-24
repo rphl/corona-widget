@@ -431,10 +431,9 @@ class UIComp {
                 b.text("-", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.green.color, true), 1, 0.9)
             }
         }
-        b.text( Format.number(Math.abs(diffDay), 2, ' n/v '), ENV.fonts.medium, false, 1, 0.9)
-        if (data.getDay(0).cases > 0) {
-            b.text( '% ', ENV.fonts.medium, false, 1, 0.9)
-        }
+
+        b.text( Format.number(Math.abs(diffDay), 2), ENV.fonts.medium, false, 1, 0.9)
+        b.text( '% ', ENV.fonts.medium, false, 1, 0.9)
 
         b.text(` WOCHE Ø `, ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
         const diffWeek = (data.getAvg(0) / data.getAvg(1) * 100) - 100;
