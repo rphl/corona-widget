@@ -928,7 +928,7 @@ class Format {
         let firstDatefield = Object.keys(parsedData[0])[0];
         if (availeRvalueField) {
             parsedData.forEach(item => {
-                if (item[firstDatefield].includes('.') && typeof item[availeRvalueField] !== 'undefined' && parseFloat(item[availeRvalueField].replace(',', '.')) > 0) {
+                if (item[firstDatefield].includes('-') && typeof item[availeRvalueField] !== 'undefined' && parseFloat(item[availeRvalueField].replace(',', '.')) > 0) {
                     r = item;
                 }
             })
@@ -966,7 +966,7 @@ class RkiRequest {
         return await this.getCases(newCasesTodayUrl, newCasesHistoryUrl)
     }
     async rvalue() {
-        const url = `https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/Nowcasting_Zahlen_csv.csv?__blob=publicationFile`
+        const url = `https://raw.githubusercontent.com/robert-koch-institut/SARS-CoV-2-Nowcasting_und_-R-Schaetzung/main/Nowcast_R_aktuell.csv`
         const response = await this.exec(url, false)
         return (response.status === ENV.status.ok) ? Format.rValue(response.data) : false
     }
@@ -1037,12 +1037,11 @@ class Parse {
     }
     static rCSV(rDataStr) {
         let lines = rDataStr.split(/(?:\r\n|\n)+/).filter(function (el) { return el.length != 0 })
-        let headers = lines.splice(0, 1)[0].split(";");
+        let headers = lines[0].split(",");
         let elements = []
-        for (let i = 0; i < lines.length; i++) {
+        for (let i = 1; i < lines.length; i++) {
             let element = {};
-            let j = 0;
-            let values = lines[i].split(';')
+            let values = lines[i].split(',')
             element = values.reduce(function (result, field, index) {
                 result[headers[index]] = field;
                 return result;
