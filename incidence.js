@@ -679,8 +679,6 @@ class UI {
             color = Theme.getColor(ENV.incidenceColors.orange.color, true)
         } else if (incidence >= ENV.incidenceColors.yellow.limit) {
             color = Theme.getColor(ENV.incidenceColors.yellow.color, true)
-        } else if (incidence === 0) {
-            color = Theme.getColor(ENV.incidenceColors.gray.color, true)
         }
         return color
     }
@@ -906,7 +904,8 @@ class Format {
         return dateStr
     }
     static number(number, fractionDigits = 0, placeholder = null, limit = false) {
-        if (!!placeholder && number === 0) return placeholder
+        number = Number(number)
+        if (!!placeholder && isNaN(number)) return placeholder
         if (limit !== false && Math.round(number) >= limit) fractionDigits = 0
         return Number(number).toLocaleString('de-DE', { maximumFractionDigits: fractionDigits, minimumFractionDigits: fractionDigits })
     }
