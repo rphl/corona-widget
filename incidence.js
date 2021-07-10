@@ -979,6 +979,7 @@ class RkiRequest {
         const responseHistory = await this.exec(urlHistory)
         if (responseToday.status === ENV.status.ok && responseHistory.status === ENV.status.ok) {
             let data = responseHistory.data.features.map(day => { return { cases: day.attributes.cases, date: day.attributes.MeldeDatum } })
+            if (data.length === 0) return false;
             let todayCases = responseToday.data.features.reduce((a, b) => a + b.attributes.cases, 0)
             let lastDateHistory = Math.max(...responseHistory.data.features.map(a => a.attributes.MeldeDatum))
             let lastDateToday = Math.max(...responseToday.data.features.map(a => a.attributes.date))
