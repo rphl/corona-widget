@@ -23,7 +23,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * 7 Tage Schätzwert für **Reproduktionszahl (R)**
 * tägl. **Impfquoten-/zahlen** _(Siehe Konfiguration!)_
 * iCloud Sync (Optional)
-* Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet)
+* Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet/Keine aktuellen RKI Daten)
 * Dark/Lighmode unterstützung (_Siehe Konfiguration_)
 * Autoupdate (Siehe Installation/Update)
 * Eine Art **"Themes"**: Farben/Hintergrundbild. (_Siehe Konfiguration_)
