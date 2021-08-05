@@ -112,7 +112,7 @@ const ENV = {
         '1': 'SH',
         '16': 'TH'
     },
-    vaccineSatesAbbr: {
+    vaccineStatesAbbr: {
         '8' : 'Baden-Württemberg',
         '9' : 'Bayern',
         '11' : 'Berlin',
@@ -456,7 +456,7 @@ class UIComp {
         view.space();
     }
     static vaccineRow (view, cacheID) {
-        let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID];
+        let vaccineStateName = ENV.vaccineStatesAbbr[ENV.cache[cacheID].meta.BL_ID];
 
         let b = new UI(view).stack('h', [4,0,4,0]);
         b.elem.centerAlignContent();
@@ -524,7 +524,7 @@ class UIComp {
         b3.space();
         let b3Text = ' ';
         if ((CFG.showVaccineInMedium || CFG.showVaccineInMediumRows) && ENV.cache.vaccine) {
-            let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID];
+            let vaccineStateName = ENV.vaccineStatesAbbr[ENV.cache[cacheID].meta.BL_ID];
             let vaccineQuote;
             if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
                 vaccineQuote = ENV.cache.vaccine.data.states[vaccineStateName].quote;
