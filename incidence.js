@@ -941,7 +941,7 @@ class RkiRequest {
         const outputFields = 'GEN,RS,EWZ,EWZ_BL,BL_ID,cases,cases_per_100k,cases7_per_100k,cases7_bl_per_100k,last_update,BL,IBZ';
         const url = `https://services7.arcgis.com/mOBPykOjAyBO2ZKk/arcgis/rest/services/RKI_Landkreisdaten/FeatureServer/0/query?where=1%3D1&outFields=${outputFields}&geometry=${location.longitude.toFixed(3)}%2C${location.latitude.toFixed(3)}&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelWithin&returnGeometry=false&outSR=4326&f=json`
         const response = await this.exec(url)
-        return (response.status === ENV.status.ok) ? response.data.features[0].attributes : false
+        return (response.status === ENV.status.ok && response.data.features.length!=0) ? response.data.features[0].attributes : false
     }
     async areaCases(areaID) {
         const apiStartDate = Helper.getDateBefore(CFG.graphShowDays + 7)
