@@ -377,7 +377,8 @@ class UIComp {
         let incidence = ENV.cache[cacheID].getDay().incidence
         let incidenceFormatted = Format.number(incidence, 1, 'n/v', 100)
         let incidenceParts = incidenceFormatted.split(",")
-        ib.text(incidenceParts[0], Font.boldMonospacedSystemFont(26), UI.getIncidenceColor(incidence), 1, 1)
+        let incidenceFontsize = (incidence >= 1000) ? 19 : 26;
+        ib.text(incidenceParts[0], Font.boldMonospacedSystemFont(incidenceFontsize), UI.getIncidenceColor(incidence), 1, 1)
         if (typeof incidenceParts[1] !== "undefined") {
             ib.text(',' + incidenceParts[1], Font.boldMonospacedSystemFont(18), UI.getIncidenceColor(incidence), 1, 1)
         }
