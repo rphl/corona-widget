@@ -1,6 +1,6 @@
-# Corona Inzidenz & Impfquoten Widget für iOS (Scriptable)
+# Corona Inzidenz, Impfquoten, Hospitalisierungen Widget für iOS (Scriptable)
 
-Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inzidenz / neue Fälle) sowie Infos zu den Impfungen.
+Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inzidenz / neue Fälle) sowie Infos zu den Impfungen/Hospitalisierungen.
 
 ```diff
 + SIEHE "FEATURES" und KONFIGURATIONS ABSCHNITT FÜR AKTUELLE FUNKTIONSWEISE-/UMFANG!
@@ -8,12 +8,14 @@ Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inziden
 
 **Inzidenz**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
-**Inzidenz + Impfquoten**
+** + Impfquoten**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_vaccine.jpg)
+** + Hospitalisierungen (Ampel)**
+![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_hospitalization.jpg)
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
 
-**☕️ Einen Kaffee ausgeben 🙃:** https://ko-fi.com/rapha
+**☕️ Einen Kaffee ausgeben? 🙃:** https://ko-fi.com/rapha
 
 # ✨ Features
 
@@ -97,7 +99,9 @@ Das Skript kann auch über bestimmte Optionen konfiguriert werden. (Änderungen 
 
 **Optionen:**
 * `theme: ''` Automatic Light/Darkmode switch = `''` OR  lightmode only = `light` OR darkmode only = `dark`
-* `showVaccineInMedium: false` show vaccine status based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+* `showDataInRow 'hospitalization'` // show "vaccine", "hospitalization", or false  (statictics) based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    `showDataInBlocks: 'vaccine'` // show "vaccine", "hospitalization", or false (disabled) based on RKI reports (State/Country). MEDIUMWIDGET IS REQUIRED!
+    
 * `openUrl: false` "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", open RKI URL on tap, set false to disable
 * `graphShowValues: 'i'` 'i' = incidence OR 'c' = cases
 * `graphShowDays: 21` show days in graph
@@ -200,7 +204,7 @@ Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild
 **Nur Impfquoten anzeigen**
 ```
 {
-    "showVaccineInMedium": true
+    "showDataInBlocks": 'vaccine'
 }
 ```
 
@@ -208,6 +212,6 @@ Optional kann je Theme mit `mainBackgroundImageURL` eine URL zum Hintergrundbild
 ```
 {
     "openUrl": "https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4",
-    "showVaccineInMedium": true
+    "showDataInBlocks": 'vaccine'
 }
 ```
