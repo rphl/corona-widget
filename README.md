@@ -8,9 +8,11 @@ Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inziden
 
 **Inzidenz**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot.jpg)
-** + Impfquoten**
+
+**+ Impfquoten**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_vaccine.jpg)
-** + Hospitalisierungen (Ampel)**
+
+**+  Hospitalisierungen (Ampel)**
 ![IMG_5438](https://raw.githubusercontent.com/rphl/corona-widget/master/screenshots/screenshot_hospitalization.jpg)
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
@@ -24,6 +26,7 @@ _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung 
 * 21 Tage Diagram für **Inzidenz** oder **Neue tägl. Fälle** je Stadt/Kreis, Bundesland, Bund
 * 7 Tage Schätzwert für **Reproduktionszahl (R)**
 * tägl. **Impfquoten-/zahlen** _(Siehe Konfiguration!)_
+* tägl. **Hospitalisierungen/-Incidence** _(Siehe Konfiguration!)_
 * iCloud Sync (Optional)
 * Automatischer Offlinemodus (📡 = Kein GPS ⚡️ = Kein Internet/Keine aktuellen RKI Daten)
 * Dark/Lighmode unterstützung (_Siehe Konfiguration_)
