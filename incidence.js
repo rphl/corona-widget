@@ -749,10 +749,10 @@ class UI {
         context.respectScreenScale = true
         
                
-        if (hospitalizedIncidence > ENV.hospitalizedIncidenceLimits.orange.limit) {
-            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.orange.color, true))
-        } else if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.red.limit) {
+        if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.red.limit) {
             context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.red.color, true))
+        } else if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.orange.limit) {
+            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.orange.color, true))
         } else {
             context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.green.color, true))
         }
