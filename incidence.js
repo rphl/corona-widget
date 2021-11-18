@@ -21,8 +21,8 @@
 
 let CFG = {
     theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only darkmode is used
-    showVaccineInMedium: false, // "show vaccine values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
-    showVaccineInMediumRows: true, // "show vaccine percent based on RKI reports (State/Country). MEDIUMWIDGET IS REQUIRED!
+    showDataInRow: 'hospitalization', // show "vaccine", "hospitalization", or false  (statictics) values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showDataInBlocks: 'vaccine', // show "vaccine", "hospitalization", or false disabled based on RKI reports (State/Country). MEDIUMWIDGET IS REQUIRED!
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -93,6 +93,11 @@ const ENV = {
         yellow: { limit: 25, color: 'incidenceColorsYellow' },
         green: { limit: 1, color: 'incidenceColorsGreen' },
         gray: { limit: 0, color: 'incidenceColorsGray' }
+    },
+    hospitalizedIncidenceLimits: {
+        green: { limit: 3, color: 'incidenceColorsGreen' },
+        orange: { limit: 6, color: 'incidenceColorsOrange' },
+        red: { limit: 9, color: 'incidenceColorsDarkdarkred' },
     },
     statesAbbr: {
         '8': 'BW',
@@ -350,10 +355,12 @@ class UIComp {
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
-        if (ENV.isMediumWidget && !CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+        if (ENV.isMediumWidget && CFG.showDataInRow === false && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.statisticsRow(bb3, 's0')
-        } else if (ENV.isMediumWidget && CFG.showVaccineInMedium && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+        } else if (ENV.isMediumWidget && CFG.showDataInRow === 'vaccince' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.vaccineRow(bb3, 's0')
+        } else if (ENV.isMediumWidget && CFG.showDataInRow === 'hospitalization' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.hospitalization !== 'undefined') {
+            UIComp.hospitalizationRow(bb3, 's0')
         } else if (ENV.isMediumWidget && typeof ENV.cache.s1 !== 'undefined') {
             UIComp.incidenceRow(bb3, 's1')
         } else if (!ENV.isMediumWidget) {
@@ -454,7 +461,7 @@ class UIComp {
         let b = new UI(view).stack('h', [4,0,4,0])
         b.elem.centerAlignContent()
         b.space()
-        b.text("💉 ", ENV.fonts.medium, false, 1, 0.9)
+        b.text("💉² ", ENV.fonts.medium, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
         let vaccinatedState = ENV.cache.vaccine.data.states[vaccineStateName].vaccinated / 1000000;
         b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
@@ -466,6 +473,35 @@ class UIComp {
         let date = Format.dateStr(dateTS)
         date = date.replace('.2021', '');
         b.text('(in Mio. / '+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.space()
+        view.space()
+    }
+    static hospitalizationRow (view, cacheID) {
+        const stateId = ENV.cache[cacheID].meta.BL_ID;
+        const stateName = ENV.statesAbbr[stateId]
+        
+        let b = new UI(view).stack('h', [4,0,4,0])
+        b.elem.centerAlignContent()
+        b.space()
+        
+        const stateHospitalizationData = ENV.cache.hospitalization.data[parseInt(stateId)];
+        const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
+        const stateHospitalized = stateHospitalizationData.hospitalization['7daysCases'];
+        const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence);
+        b.text('🏥 ' + stateName + ' ', ENV.fonts.medium, false, 1, 0.9)
+        b.image(stateHospitalizedStatus, 0.9)
+        b.text(' '+stateHospitalizedIncidence, ENV.fonts.medium, false, 1, 0.9)
+        b.text(' (' + stateHospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.space(4)
+
+        const hospitalizationData = ENV.cache.hospitalization.data[0];
+        const hospitalizedIncidence = hospitalizationData.hospitalization['7daysIncidence'];
+        const hospitalized = hospitalizationData.hospitalization['7daysCases'];
+        const hospitalizedStatus = UI.getHospitalizationStatus(hospitalizedIncidence);
+        b.text("/ D: ", ENV.fonts.medium, false, 1, 0.9)
+        b.image(hospitalizedStatus, 0.9)
+        b.text(' '+hospitalizedIncidence, ENV.fonts.medium, false, 1, 0.9)
+        b.text(' (' + hospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
         b.space()
         view.space()
     }
@@ -515,18 +551,12 @@ class UIComp {
 
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
-        let b3Text = ' ';
-        if ((CFG.showVaccineInMedium || CFG.showVaccineInMediumRows) && ENV.cache.vaccine) {
-            let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
-            let vaccineQuote
-            if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
-                vaccineQuote = ENV.cache.vaccine.data.states[vaccineStateName].quote
-            } else {
-                vaccineQuote = ENV.cache.vaccine.data.quote
-            }
-            b3Text = '💉 ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
+        if (CFG.showDataInBlocks === 'vaccine' && ENV.cache.vaccine) {
+            UIComp.vaccinceInfo(b3, cacheID);
+        } else if (CFG.showDataInBlocks === 'hospitalization' && ENV.cache.hospitalization) {
+            UIComp.hospitalizationInfo(b3, cacheID);
         }
-        b3.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
+        
 
         let b2 = new UI(r).stack('v', false, false, false, false, [60, 30])
         let b2b2 = new UI(b2).stack('h', [0, 0, 0, 6])
@@ -544,6 +574,33 @@ class UIComp {
         b2b3.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
 
         r.space(6)
+    }
+    static vaccinceInfo(view, cacheID) {
+        Helper.log('vaccinceInfo', cacheID)
+        let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
+        let b3Text = ' ';
+        let vaccineQuote = '';
+        if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
+            vaccineQuote = ENV.cache.vaccine.data.states[vaccineStateName]['2nd_vaccination'].quote
+        } else {
+            vaccineQuote = ENV.cache.vaccine.data['2nd_vaccination'].vaccinated / ENV.cache.vaccine.data.total * 100
+        }
+        b3Text = '💉² ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
+        view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
+    }
+    static hospitalizationInfo(view, cacheID) {
+        let b3Text = ' ';
+        let stateId = 0;
+        if (cacheID !== 'd') {
+            stateId = ENV.cache[cacheID].meta.BL_ID;
+        }
+        const stateHospitalizationData = ENV.cache.hospitalization.data[parseInt(stateId)];
+        const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
+        const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence);
+
+        b3Text += stateHospitalizedIncidence + ' ';
+        view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
+        view.image(stateHospitalizedStatus, 0.9)
     }
     static areaIcon(view, ibzID) {
         let b = new UI(view).stack('h', [1, 3, 1, 3], Theme.getColor('areaIconBackgroundColor', true), 2, 2)
@@ -682,6 +739,27 @@ class UI {
             color = Theme.getColor(ENV.incidenceColors.yellow.color, true)
         }
         return color
+    }
+    static getHospitalizationStatus(hospitalizedIncidence) {
+        let width = 10;
+        let height = 10;
+        let context = new DrawContext()
+        context.size = new Size(width, height)
+        context.opaque = false
+        context.respectScreenScale = true
+        
+               
+        if (hospitalizedIncidence > ENV.hospitalizedIncidenceLimits.orange.limit) {
+            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.orange.color, true))
+        } else if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.red.limit) {
+            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.red.color, true))
+        } else {
+            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.green.color, true))
+        }
+        let rect = new Rect(0, 0, width, height)
+        context.fillEllipse(rect)
+
+        return context.getImage()
     }
 }
 
@@ -869,6 +947,7 @@ class Data {
             ENV.cache.d = dData
         }
 
+        // VACCINCE DATA
         if (typeof ENV.cache.vaccine === 'undefined') {
             let vaccineValues = await rkiRequest.vaccinevalues()
             if (!vaccineValues) {
@@ -880,6 +959,20 @@ class Data {
             vaccineData.meta.lastUpdate = vaccineValues.lastUpdate
             await cfm.save(vaccineData)
             ENV.cache.vaccine = vaccineData
+        }
+
+        // HOSPITALIZATION DATA
+        if (typeof ENV.cache.hospitalization === 'undefined') {
+            let hospitalizationValues = await rkiRequest.hospitalizationvalues()
+            if (!hospitalizationValues) {
+                const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
+                return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
+            }
+            let hospitalizationData = new Data('hospitalization')
+            hospitalizationData.data = hospitalizationValues
+            hospitalizationData.meta.lastUpdate = hospitalizationValues.lastUpdate
+            await cfm.save(hospitalizationData)
+            ENV.cache.hospitalization = hospitalizationData
         }
 
         if (typeof ENV.cache['s' + useStaticCoordsIndex] !== 'undefined' && typeof ENV.cache[locationData.BL_ID] !== 'undefined' && typeof ENV.cache.d !== 'undefined') {
@@ -972,6 +1065,11 @@ class RkiRequest {
     }
     async vaccinevalues () {
         const url = `https://rki-vaccination-data.vercel.app/api`
+        const response = await this.exec(url)
+        return (response.status === ENV.status.ok) ? response.data : false
+    }
+    async hospitalizationvalues () {
+        const url = `https://corona-widget-api.vercel.app/api/hospitalization`
         const response = await this.exec(url)
         return (response.status === ENV.status.ok) ? response.data : false
     }
