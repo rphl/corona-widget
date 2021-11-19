@@ -54,6 +54,8 @@ const ENV = {
             dateTextColor: '#777777',
             dateTextColor2: '#777777',
             graphTextColor: '#888888',
+            incidenceColorsLila: '#93079f',
+            incidenceColorsPink: '#D90183',
             incidenceColorsDarkdarkred: '#941100',
             incidenceColorsDarkred: '#c01a00',
             incidenceColorsRed: '#f92206',
@@ -76,6 +78,8 @@ const ENV = {
             dateTextColor: '#777777',
             dateTextColor2: '#777777',
             graphTextColor: '#888888',
+            incidenceColorsLila: '#93079f',
+            incidenceColorsPink: '#D90183',
             incidenceColorsDarkdarkred: '#941100',
             incidenceColorsDarkred: '#c01a00',
             incidenceColorsRed: '#f92206',
@@ -86,6 +90,8 @@ const ENV = {
         }
     },
     incidenceColors: {
+        lila: { limit: 1000, color: 'incidenceColorsLila' },
+        pink: { limit: 500, color: 'incidenceColorsPink' },
         darkdarkred: { limit: 250, color: 'incidenceColorsDarkdarkred' },
         darkred: { limit: 100, color: 'incidenceColorsDarkred' },
         red: { limit: 50, color: 'incidenceColorsRed' },
@@ -95,7 +101,8 @@ const ENV = {
         gray: { limit: 0, color: 'incidenceColorsGray' }
     },
     hospitalizedIncidenceLimits: {
-        green: { limit: 3, color: 'incidenceColorsGreen' },
+        green: { limit: 0, color: 'incidenceColorsGreen' },
+        yellow: { limit: 3, color: 'incidenceColorsYellow' },
         orange: { limit: 6, color: 'incidenceColorsOrange' },
         red: { limit: 9, color: 'incidenceColorsDarkdarkred' },
     },
