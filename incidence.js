@@ -530,7 +530,10 @@ class UIComp {
 
         let b4 = new UI(b).stack('h', [0, 0, 1, 5])
         b4.space()
-        b4.text('+' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
+        if (CFG.showDataInBlocks === 'hospitalization' && ENV.cache.hospitalization) {
+            UIComp.hospitalizationIcon(b4, cacheID, 8, 8);
+        }
+        b4.text(' +' + Format.number(ENV.cache[cacheID].getDay().cases), ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
         b.space(2)
     }
 
@@ -600,6 +603,17 @@ class UIComp {
 
         b3Text += stateHospitalizedIncidence + ' ';
         view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
+        view.image(stateHospitalizedStatus, 0.9)
+    }
+    static hospitalizationIcon(view, cacheID, width, height) {
+        let stateId = 0;
+        if (cacheID !== 'd') {
+            stateId = ENV.cache[cacheID].meta.BL_ID;
+        }
+
+        const stateHospitalizationData = ENV.cache.hospitalization.data[parseInt(stateId)];
+        const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
+        const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence, width, height);
         view.image(stateHospitalizedStatus, 0.9)
     }
     static areaIcon(view, ibzID) {
@@ -727,7 +741,11 @@ class UI {
     }
     static getIncidenceColor(incidence) {
         let color = Theme.getColor(ENV.incidenceColors.green.color, true)
-        if (incidence > ENV.incidenceColors.darkdarkred.limit) {
+        if (incidence >= ENV.incidenceColors.lila.limit) {
+            color = Theme.getColor(ENV.incidenceColors.lila.color, true)
+        } else if (incidence >= ENV.incidenceColors.pink.limit) {
+            color = Theme.getColor(ENV.incidenceColors.pink.color, true)
+        } else if (incidence >= ENV.incidenceColors.darkdarkred.limit) {
             color = Theme.getColor(ENV.incidenceColors.darkdarkred.color, true)
         } else if (incidence >= ENV.incidenceColors.darkred.limit) {
             color = Theme.getColor(ENV.incidenceColors.darkred.color, true)
@@ -740,19 +758,18 @@ class UI {
         }
         return color
     }
-    static getHospitalizationStatus(hospitalizedIncidence) {
-        let width = 10;
-        let height = 10;
+    static getHospitalizationStatus(hospitalizedIncidence, width = 10, height = 10) {
         let context = new DrawContext()
         context.size = new Size(width, height)
         context.opaque = false
         context.respectScreenScale = true
-        
-               
+ 
         if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.red.limit) {
             context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.red.color, true))
         } else if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.orange.limit) {
             context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.orange.color, true))
+        } else if (hospitalizedIncidence >= ENV.hospitalizedIncidenceLimits.yellow.limit) {
+            context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.yellow.color, true))
         } else {
             context.setFillColor(Theme.getColor(ENV.hospitalizedIncidenceLimits.green.color, true))
         }
