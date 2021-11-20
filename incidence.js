@@ -21,8 +21,8 @@
 
 let CFG = {
     theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only darkmode is used
-    showDataInRow: 'hospitalization', // show "vaccine", "hospitalization", or false  (statictics) values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
-    showDataInBlocks: 'vaccine', // show "vaccine", "hospitalization", or false disabled based on RKI reports (State/Country). MEDIUMWIDGET IS REQUIRED!
+    showDataInRow: false, // show "vaccine", "hospitalization", or false  (statictics) values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showDataInBlocks: 'hospitalization', // show "vaccine", "hospitalization", or false disabled based on RKI reports (State/Country). Vaccine only in MEDIUMWIDGET. Hospitalization only in SMALLWIDGET.
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -364,7 +364,7 @@ class UIComp {
         let bb3 = new UI(bb).stack('h', padding)
         if (ENV.isMediumWidget && CFG.showDataInRow === false && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.statisticsRow(bb3, 's0')
-        } else if (ENV.isMediumWidget && CFG.showDataInRow === 'vaccince' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+        } else if (ENV.isMediumWidget && CFG.showDataInRow === 'vaccine' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.vaccineRow(bb3, 's0')
         } else if (ENV.isMediumWidget && CFG.showDataInRow === 'hospitalization' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.hospitalization !== 'undefined') {
             UIComp.hospitalizationRow(bb3, 's0')
@@ -433,7 +433,7 @@ class UIComp {
         let b = new UI(view).stack('h', [4,0,4,0])
         b.elem.centerAlignContent()
         b.space()
-        b.text("Diff. ", ENV.fonts.medium, false, 1, 0.9)
+        b.text("Diff. ", ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         const dayLastWeek = Format.dateStr(data.getDay(7).date, false);
         b.text(` ${dayLastWeek} `, ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
 
@@ -447,8 +447,8 @@ class UIComp {
             }
         }
 
-        b.text( Format.number(Math.abs(diffDay), 2), ENV.fonts.medium, false, 1, 0.9)
-        b.text( '% ', ENV.fonts.medium, false, 1, 0.9)
+        b.text( Format.number(Math.abs(diffDay), 2), ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
+        b.text( '% ', ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
 
         b.text(` WOCHE Ø `, ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
         const diffWeek = (data.getAvg(0) / data.getAvg(1) * 100) - 100;
@@ -458,7 +458,7 @@ class UIComp {
             b.text("-", ENV.fonts.medium, Theme.getColor(ENV.incidenceColors.green.color, true), 1, 0.9)
         }
 
-        b.text( Format.number(Math.abs(diffWeek), 2) + '%', ENV.fonts.medium, false, 1, 0.9)
+        b.text( Format.number(Math.abs(diffWeek), 2) + '%', ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.space()
         view.space()
     }
@@ -495,9 +495,9 @@ class UIComp {
         const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
         const stateHospitalized = stateHospitalizationData.hospitalization['7daysCases'];
         const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence);
-        b.text('🏥 ' + stateName + ' ', ENV.fonts.medium, false, 1, 0.9)
+        b.text('🏥 ' + stateName + ' ', ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.image(stateHospitalizedStatus, 0.9)
-        b.text(' '+stateHospitalizedIncidence, ENV.fonts.medium, false, 1, 0.9)
+        b.text(' '+stateHospitalizedIncidence, ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.text(' (' + stateHospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
         b.space(4)
 
@@ -505,9 +505,9 @@ class UIComp {
         const hospitalizedIncidence = hospitalizationData.hospitalization['7daysIncidence'];
         const hospitalized = hospitalizationData.hospitalization['7daysCases'];
         const hospitalizedStatus = UI.getHospitalizationStatus(hospitalizedIncidence);
-        b.text("/ D: ", ENV.fonts.medium, false, 1, 0.9)
+        b.text("/ D: ", ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.image(hospitalizedStatus, 0.9)
-        b.text(' '+hospitalizedIncidence, ENV.fonts.medium, false, 1, 0.9)
+        b.text(' '+hospitalizedIncidence, ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.text(' (' + hospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
         b.space()
         view.space()
@@ -562,7 +562,7 @@ class UIComp {
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
         if (CFG.showDataInBlocks === 'vaccine' && ENV.cache.vaccine) {
-            UIComp.vaccinceInfo(b3, cacheID);
+            UIComp.vaccineInfo(b3, cacheID);
         } else if (CFG.showDataInBlocks === 'hospitalization' && ENV.cache.hospitalization) {
             UIComp.hospitalizationInfo(b3, cacheID);
         }
@@ -585,8 +585,8 @@ class UIComp {
 
         r.space(6)
     }
-    static vaccinceInfo(view, cacheID) {
-        Helper.log('vaccinceInfo', cacheID)
+    static vaccineInfo(view, cacheID) {
+        Helper.log('vaccineInfo', cacheID)
         let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
         let b3Text = ' ';
         let vaccineQuote = '';
@@ -971,7 +971,7 @@ class Data {
             ENV.cache.d = dData
         }
 
-        // VACCINCE DATA
+        // VACCINE DATA
         if (typeof ENV.cache.vaccine === 'undefined') {
             let vaccineValues = await rkiRequest.vaccinevalues()
             if (!vaccineValues) {
