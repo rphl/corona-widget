@@ -904,6 +904,11 @@ class Data {
             const vaccine = new Data('vaccine', vaccineData.data.data, vaccineData.data.meta)
             ENV.cache.vaccine = vaccine
 
+            const hospitalizationData = await cfm.read('coronaWidget_hospitalization')
+            if (!hospitalizationData.data.data) return ENV.status.error
+            const hospitalization = new Data('hospitalization', hospitalizationData.data.data, hospitalizationData.data.meta)
+            ENV.cache.hospitalization = hospitalization
+
             return ENV.status.ok
         }
         return ENV.status.error
