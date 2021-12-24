@@ -463,23 +463,40 @@ class UIComp {
         view.space()
     }
     static vaccineRow (view, cacheID) {
-        let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
+        // state data
+        const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
+        let stateData = ENV.cache.vaccine.data.data.filter(state => {
+            return state.rs === blId
+        });
+        stateData = stateData.pop();
 
         let b = new UI(view).stack('h', [4,0,4,0])
         b.elem.centerAlignContent()
         b.space()
-        b.text("💉² ", ENV.fonts.medium, false, 1, 0.9)
+        b.text("💉", ENV.fonts.normal, false, 1, 0.9)
         let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        let vaccinatedState = ENV.cache.vaccine.data.states[vaccineStateName].vaccinated / 1000000;
-        b.text(name + ": " + Format.number(vaccinatedState, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
+        // b.text(name + "", ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
+        b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.text(Format.number(stateData.fullyVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)
+        b.text(' ③ ', ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.text(Format.number(stateData.boosterVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)   
         b.space(4)
-        let vaccinated = ENV.cache.vaccine.data.vaccinated / 1000000;
-        b.text("/ D: " + Format.number(vaccinated, 3) + '', ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
+        
+        // country data
+        let countryData = ENV.cache.vaccine.data.data.filter(state => {
+            return state.name === "Deutschland"
+        });
+        countryData = countryData.pop();
+
+        b.text("[ D:", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
+        b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.text(Format.number(countryData.fullyVaccinated.quote, 2) + '%', ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
+        b.text(" ]", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
         b.space(4)
-        let dateTS = new Date(ENV.cache.vaccine.meta.lastUpdate).getTime()
+        let dateTS = new Date(ENV.cache.vaccine.data.lastUpdate).getTime()
         let date = Format.dateStr(dateTS)
         date = date.replace('.2021', '');
-        b.text('(in Mio. / '+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.text('('+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 1)
         b.space()
         view.space()
     }
@@ -586,16 +603,19 @@ class UIComp {
         r.space(6)
     }
     static vaccineInfo(view, cacheID) {
-        Helper.log('vaccineInfo', cacheID)
-        let vaccineStateName = ENV.vaccineSatesAbbr[ENV.cache[cacheID].meta.BL_ID]
+        // state data
+        let vaccineData = ENV.cache.vaccine.data.data.filter(state => {
+            if (cacheID !== 'd') {
+                const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
+                return state.rs === blId
+            } else {
+                return state.name === "Deutschland"
+            }
+        });
+        vaccineData = vaccineData.pop();
+        
         let b3Text = ' ';
-        let vaccineQuote = '';
-        if (typeof ENV.cache.vaccine.data.states[vaccineStateName] !== 'undefined') {
-            vaccineQuote = ENV.cache.vaccine.data.states[vaccineStateName]['2nd_vaccination'].quote
-        } else {
-            vaccineQuote = ENV.cache.vaccine.data['2nd_vaccination'].vaccinated / ENV.cache.vaccine.data.total * 100
-        }
-        b3Text = '💉² ' + Format.number(vaccineQuote, 2, 'n/v') +'%'
+        b3Text = '💉² ' + Format.number(vaccineData.fullyVaccinated.quote, 2, 'n/v') +'%'
         view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
     }
     static hospitalizationInfo(view, cacheID) {
@@ -1093,7 +1113,7 @@ class RkiRequest {
         return (response.status === ENV.status.ok) ? Format.rValue(response.data) : false
     }
     async vaccinevalues () {
-        const url = `https://rki-vaccination-data.vercel.app/api`
+        const url = `https://rki-vaccination-data.vercel.app/api/v2`
         const response = await this.exec(url)
         return (response.status === ENV.status.ok) ? response.data : false
     }
