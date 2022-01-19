@@ -469,7 +469,7 @@ class UIComp {
         b.space()
         b.text("💉", ENV.fonts.normal, false, 1, 0.9)
 
-        if (ENV.cache.vaccine.meta.status === ENV.status.ok) {
+        if (ENV.cache.vaccine.meta.status !== ENV.status.error) {
             // state data
             const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
             let stateData = ENV.cache.vaccine.data.data.filter(state => {
@@ -613,7 +613,7 @@ class UIComp {
         // state data
         let b3Text = ' ';
         let quote = 'n/v'
-        if (ENV.cache.vaccine.meta.status === ENV.status.ok) {
+        if (ENV.cache.vaccine.meta.status !== ENV.status.error) {
             let vaccineData = ENV.cache.vaccine.data.data.filter(state => {
                 if (cacheID !== 'd') {
                     const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
