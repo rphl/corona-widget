@@ -501,7 +501,7 @@ class UIComp {
             date = date.replace('.2021', '');
             b.text('('+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 1)
         } else {
-            b.text('Impqfquoten aktuell nicht verfügbar.', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1);
+            b.text('Impfquoten aktuell nicht verfügbar.', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1);
         }
         b.space()
         view.space()
