@@ -463,40 +463,46 @@ class UIComp {
         view.space()
     }
     static vaccineRow (view, cacheID) {
-        // state data
-        const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
-        let stateData = ENV.cache.vaccine.data.data.filter(state => {
-            return state.rs === blId
-        });
-        stateData = stateData.pop();
 
         let b = new UI(view).stack('h', [4,0,4,0])
         b.elem.centerAlignContent()
         b.space()
         b.text("💉", ENV.fonts.normal, false, 1, 0.9)
-        let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
-        // b.text(name + "", ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
-        b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
-        b.text(Format.number(stateData.fullyVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)
-        b.text(' ③ ', ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
-        b.text(Format.number(stateData.boosterVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)   
-        b.space(4)
-        
-        // country data
-        let countryData = ENV.cache.vaccine.data.data.filter(state => {
-            return state.name === "Deutschland"
-        });
-        countryData = countryData.pop();
 
-        b.text("[ D:", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
-        b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
-        b.text(Format.number(countryData.fullyVaccinated.quote, 2) + '%', ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
-        b.text(" ]", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
-        b.space(4)
-        let dateTS = new Date(ENV.cache.vaccine.data.lastUpdate).getTime()
-        let date = Format.dateStr(dateTS)
-        date = date.replace('.2021', '');
-        b.text('('+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 1)
+        if (ENV.cache.vaccine.meta.status === ENV.status.ok) {
+            // state data
+            const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
+            let stateData = ENV.cache.vaccine.data.data.filter(state => {
+                return state.rs === blId
+            });
+            stateData = stateData.pop();
+
+            // let name = (typeof ENV.cache[cacheID].meta.BL_ID !== 'undefined') ? ENV.statesAbbr[ENV.cache[cacheID].meta.BL_ID] : cacheID
+            // b.text(name + "", ENV.fonts.medium, Theme.getColor('titleRowTextColor2'), 1, 0.9)
+            b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+            b.text(Format.number(stateData.fullyVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)
+            b.text(' ③ ', ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+            b.text(Format.number(stateData.boosterVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1)   
+            b.space(4)
+            
+            // country data
+            let countryData = ENV.cache.vaccine.data.data.filter(state => {
+                return state.name === "Deutschland"
+            });
+            countryData = countryData.pop();
+
+            b.text("[ D:", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
+            b.text(" ② ", ENV.fonts.normal, Theme.getColor('dateTextColor2', true), 1, 0.9)
+            b.text(Format.number(countryData.fullyVaccinated.quote, 1) + '%', ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
+            b.text(" ]", ENV.fonts.normal, Theme.getColor('dateTextColor2'), 1, 0.9)
+            b.space(4)
+            let dateTS = new Date(ENV.cache.vaccine.data.lastUpdate).getTime()
+            let date = Format.dateStr(dateTS)
+            date = date.replace('.2021', '');
+            b.text('('+ date +')', ENV.fonts.xsmall, Theme.getColor('dateTextColor2', true), 1, 1)
+        } else {
+            b.text('Impqfquoten aktuell nicht verfügbar.', ENV.fonts.normal, Theme.getColor('titleRowTextColor2'), 1, 1);
+        }
         b.space()
         view.space()
     }
@@ -510,22 +516,23 @@ class UIComp {
         
         const stateHospitalizationData = ENV.cache.hospitalization.data[parseInt(stateId)];
         const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
-        const stateHospitalized = stateHospitalizationData.hospitalization['7daysCases'];
+        const stateHospitalized = Format.number(stateHospitalizationData.hospitalization['7daysCases'], 0);
         const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence);
-        b.text('🏥 ' + stateName + ' ', ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
+        b.text('🏥 ', ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.image(stateHospitalizedStatus, 0.9)
-        b.text(' '+stateHospitalizedIncidence, ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
+        b.text(' '+Format.number(stateHospitalizedIncidence, 2), ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.text(' (' + stateHospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
         b.space(4)
 
         const hospitalizationData = ENV.cache.hospitalization.data[0];
         const hospitalizedIncidence = hospitalizationData.hospitalization['7daysIncidence'];
-        const hospitalized = hospitalizationData.hospitalization['7daysCases'];
+        const hospitalized = Format.number(hospitalizationData.hospitalization['7daysCases'], 0);
         const hospitalizedStatus = UI.getHospitalizationStatus(hospitalizedIncidence);
-        b.text("/ D: ", ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
+        b.text("[ D: ", ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.image(hospitalizedStatus, 0.9)
-        b.text(' '+hospitalizedIncidence, ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
+        b.text(' '+Format.number(hospitalizedIncidence, 2), ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.text(' (' + hospitalized + ')', ENV.fonts.small, Theme.getColor('dateTextColor2', true), 1, 0.9)
+        b.text(" ] ", ENV.fonts.medium, Theme.getColor('titleRowTextColor'), 1, 0.9)
         b.space()
         view.space()
     }
@@ -604,18 +611,21 @@ class UIComp {
     }
     static vaccineInfo(view, cacheID) {
         // state data
-        let vaccineData = ENV.cache.vaccine.data.data.filter(state => {
-            if (cacheID !== 'd') {
-                const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
-                return state.rs === blId
-            } else {
-                return state.name === "Deutschland"
-            }
-        });
-        vaccineData = vaccineData.pop();
-        
         let b3Text = ' ';
-        b3Text = '💉² ' + Format.number(vaccineData.fullyVaccinated.quote, 2, 'n/v') +'%'
+        let quote = 'n/v'
+        if (ENV.cache.vaccine.meta.status === ENV.status.ok) {
+            let vaccineData = ENV.cache.vaccine.data.data.filter(state => {
+                if (cacheID !== 'd') {
+                    const blId = ENV.cache[cacheID].meta.BL_ID.toString().padStart(2, '0');
+                    return state.rs === blId
+                } else {
+                    return state.name === "Deutschland"
+                }
+            });
+            vaccineData = vaccineData.pop();
+            quote = vaccineData.fullyVaccinated.quote;
+        }
+        b3Text = '💉² ' + Format.number(quote, 1, 'n/v ')
         view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
     }
     static hospitalizationInfo(view, cacheID) {
@@ -628,7 +638,7 @@ class UIComp {
         const stateHospitalizedIncidence = stateHospitalizationData.hospitalization['7daysIncidence'];
         const stateHospitalizedStatus = UI.getHospitalizationStatus(stateHospitalizedIncidence);
 
-        b3Text += stateHospitalizedIncidence + ' ';
+        b3Text += Format.number(stateHospitalizedIncidence, 2) + ' ';
         view.text(b3Text, ENV.fonts.xsmall, Theme.getColor('graphTextColor', true), 1, 0.9)
         view.image(stateHospitalizedStatus, 0.9)
     }
@@ -1004,6 +1014,9 @@ class Data {
                 return (status === ENV.status.ok) ? ENV.status.fromcache : ENV.status.error
             }
             let vaccineData = new Data('vaccine')
+            if (typeof vaccineValues.lastUpdate === 'undefined') {
+                vaccineData.meta.status = ENV.status.error;
+            }
             vaccineData.data = vaccineValues
             vaccineData.meta.lastUpdate = vaccineValues.lastUpdate
             await cfm.save(vaccineData)
