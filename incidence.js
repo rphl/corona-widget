@@ -79,7 +79,7 @@ const ENV = {
             dateTextColor2: '#8e8e93',
             graphTextColor: '#aeaeb2',
             incidenceColorsPurple: '#bf5af2',
-            incidenceColorsPink: '#ff43bb',
+            incidenceColorsPink: '#ff43b8',
             incidenceColorsDarkdarkred: '#c30b00',
             incidenceColorsDarkred: '#fe0e00',
             incidenceColorsRed: '#ff453a',
