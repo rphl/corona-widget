@@ -364,8 +364,6 @@ class UIComp {
         let bb3 = new UI(bb).stack('h', padding)
         if (ENV.isMediumWidget && CFG.showDataInRow === false && typeof ENV.cache.s1 === 'undefined') {
             UIComp.statisticsRow(bb3, 's0')
-        } else if (ENV.isMediumWidget && CFG.showDataInRow === 'vaccine' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
-            UIComp.vaccineRow(bb3, 's0')
         } else if (ENV.isMediumWidget && CFG.showDataInRow === 'hospitalization' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.hospitalization !== 'undefined') {
             UIComp.hospitalizationRow(bb3, 's0')
         } else if (ENV.isMediumWidget && typeof ENV.cache.s1 !== 'undefined') {
@@ -587,12 +585,9 @@ class UIComp {
 
         let b3 = new UI(b).stack('h', [0, 0, 2, 6])
         b3.space()
-        if (CFG.showDataInBlocks === 'vaccine' && ENV.cache.vaccine) {
-            UIComp.vaccineInfo(b3, cacheID);
-        } else if (CFG.showDataInBlocks === 'hospitalization' && ENV.cache.hospitalization) {
+        if (CFG.showDataInBlocks === 'hospitalization' && ENV.cache.hospitalization) {
             UIComp.hospitalizationInfo(b3, cacheID);
         }
-        
 
         let b2 = new UI(r).stack('v', false, false, false, false, [60, 30])
         let b2b2 = new UI(b2).stack('h', [0, 0, 0, 6])
