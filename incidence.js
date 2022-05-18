@@ -21,8 +21,8 @@
 
 let CFG = {
     theme: '', // '' = Automatic Ligh/Darkmode based on iOS. light = only lightmode is used, dark = only darkmode is used
-    showDataInRow: false, // show "vaccine", "hospitalization", or false  (statictics) values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
-    showDataInBlocks: 'hospitalization', // show "vaccine", "hospitalization", or false disabled based on RKI reports (State/Country). Vaccine only in MEDIUMWIDGET. Hospitalization only in SMALLWIDGET.
+    showDataInRow: false, // show "hospitalization", or false  (statictics) values based on RKI reports. MEDIUMWIDGET IS REQUIRED!
+    showDataInBlocks: 'hospitalization', // show "hospitalization", or false disabled based on RKI reports (State/Country). Vaccine only in MEDIUMWIDGET. Hospitalization only in SMALLWIDGET.
     openUrl: false, //"https://experience.arcgis.com/experience/478220a4c454480e823b17327b2bf1d4", // open RKI dashboard on tap, set false to disable
     graphShowValues: 'i', // 'i' = incidence OR 'c' = cases
     graphShowDays: 21, // show days in graph
@@ -362,7 +362,7 @@ class UIComp {
         UIComp.incidenceRow(bb2, 's0')
 
         let bb3 = new UI(bb).stack('h', padding)
-        if (ENV.isMediumWidget && CFG.showDataInRow === false && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
+        if (ENV.isMediumWidget && CFG.showDataInRow === false && typeof ENV.cache.s1 === 'undefined') {
             UIComp.statisticsRow(bb3, 's0')
         } else if (ENV.isMediumWidget && CFG.showDataInRow === 'vaccine' && typeof ENV.cache.s1 === 'undefined' && typeof ENV.cache.vaccine !== 'undefined') {
             UIComp.vaccineRow(bb3, 's0')
@@ -1010,7 +1010,7 @@ class Data {
         }
 
         // VACCINE DATA
-        if (typeof ENV.cache.vaccine === 'undefined') {
+        if (typeof ENV.cache.vaccine === 'undefined' && (CFG.showDataInBlocks === 'vaccine' || CFG.showDataInRow  === 'vaccine')) {
             let vaccineValues = await rkiRequest.vaccinevalues()
             if (!vaccineValues) {
                 const status = await Data.tryLoadFromCache(configId, useStaticCoordsIndex)
