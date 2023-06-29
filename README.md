@@ -17,8 +17,6 @@ Widget zeigt die Inzidenz, tägl. neue Fälle, den Verlauf für 21 Tage (Inziden
 
 _Dank der positiven Resonanz, jetzt im Repo zur einfacheren Wartung/Erweiterung ( [Mein original GIST](https://gist.github.com/rphl/0491c5f9cb345bf831248732374c4ef5) ) Feedback, PRs, etc. sind Willkommen._
 
-**☕️ Einen Kaffee ausgeben? 🙃:** https://ko-fi.com/rapha
-
 # ✨ Features
 
 * **Live Inzidenz** + **Wochentrend!** für Stadt/Kreis, Bundesland, Bund
