@@ -16,7 +16,6 @@
 // ÄNDERUNGEN HIER, WERDEN BEI AKTIVEN AUTOUPDATE ÜBERSCHRIEBEN
 // ZUR KONFIGURATION SIEHE README!
 // https://github.com/rphl/corona-widget#erweiterte-konfiguration
-//
 // ============= ============= ============= ============= =================
 
 let CFG = {
